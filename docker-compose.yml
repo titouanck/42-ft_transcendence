@@ -1,0 +1,58 @@
+version: '3'
+services:
+
+  postgres:
+    container_name: postgres
+    build:
+      context: ./docker/postgres
+    image: postgres:ft_transcendence
+    restart: always
+    networks:
+      - ft_transcendence
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_PORT=${DB_PORT}
+
+  django:
+    container_name: django
+    build:
+      context: ./docker/django
+    image: django:ft_transcendence
+    restart: always
+    networks:
+      - ft_transcendence
+    ports:
+      - 8000:8000
+    volumes:
+      - django_code:/app
+    environment:
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - DB_HOST=${DB_HOST}
+      - SECRET_KEY=${SECRET_KEY}
+      - CLIENT_ID=${CLIENT_ID}
+      - CLIENT_SECRET=${CLIENT_SECRET}
+
+networks:
+  ft_transcendence:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./database
+  django_code:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./srcs

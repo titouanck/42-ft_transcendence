@@ -1,0 +1,9 @@
+# Credentials
+.env
+*.json
+
+# Python
+__pycache__/
+
+# Other
+.vscode/
