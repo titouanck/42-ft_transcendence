@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}<title>PROFIL</title>{% endblock %}
+
+{% block content %}
+<h1>Bienvenue {{username}}</h1>
+{% if pic %}
+<img style="display:block;" src="{{pic}}" width=255 height=255 alt="profile picture">
+<button type="button" class="btn btn-primary" id="logout-button">Log out</button>
+{% endif %}
+{% endblock %}
+
+{% block end %}
+<script src="{% static 'profil.js' %}"></script>
+{% endblock %}

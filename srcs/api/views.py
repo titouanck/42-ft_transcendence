@@ -1,10 +1,24 @@
-import os, random, requests, json
+import os, requests, json
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.utils import timezone
 from urllib.parse import urlencode
-from datetime import datetime, timedelta
-from .models import FortyTwoToken
+from datetime import datetime
+from .models import FortyTwoToken, Player
+
+def is_token_valid(cookie):
+	try:
+		fortytwotoken_obj = FortyTwoToken.objects.get(pk=cookie)
+		Player.objects.get(token_42=fortytwotoken_obj)
+		print(f'current time : {timezone.now()}')
+		print(f'expires at : {fortytwotoken_obj.expires_at}')
+		if timezone.now() < fortytwotoken_obj.expires_at:
+			return True
+		else:
+			print('is_token_valid returns else')
+	except Exception as e:
+		pass
+	return False
 
 def request_42_access():
 	url = 'https://api.intra.42.fr/oauth/authorize'
@@ -17,7 +31,7 @@ def request_42_access():
 	redirect_url = f'{url}?{urlencode(params)}'
 	return redirect(redirect_url)
 
-def acquire_access_token(code=None, refresh_token=None):
+def acquire_access_token(code):
 	url = 'https://api.intra.42.fr/oauth/token'
 	params = {
 		'grant_type' : 'authorization_code',
@@ -26,16 +40,9 @@ def acquire_access_token(code=None, refresh_token=None):
 		'code' : code,
 		'redirect_uri' : 'http://127.0.0.1:8000/api',
 	}
-	if code:
-		params['grant_type'] = 'authorization_code'
-		params['code'] = code
-	elif refresh_token:
-		params['grant_type'] = 'refresh_token'
-		params['refresh_token'] = refresh_token
-	else:
-		return None
 	response = requests.post(url, json = params)
 	if response.status_code != 200:
+		print(f'acquire_access_token: Error {response.status_code}')
 		return None
 	return json.loads(response.content)
 
@@ -52,63 +59,45 @@ def fetch_user_data(access_token):
 	image = response_json.get('image', {}).get('link', None)
 	return login, image
 
-# 1. FALSE SI PROBLEME, TRUE SI RIEN A FAIRE, COOKIE SINON
-# Create your views here.
-
-def is_token_valid(cookies):
-	if cookies is None or 'fortytwotoken' not in cookies:
-		print('first return')
-		return False
-	try:
-		fortytwotoken_obj = FortyTwoToken.objects.get(pk=cookies['fortytwotoken'])
-		if timezone.now() < fortytwotoken_obj.access_expires_at:
-			print('1.5 return')
-			return True
-		elif timezone.now() < fortytwotoken_obj.secret_expires_at and fortytwotoken_obj.refresh_token:
-			token_json = acquire_access_token(refresh_token=fortytwotoken_obj.refresh_token)
-			if token_json and 'access_token' in token_json:
-				fortytwotoken_obj.access_token = token_json
-				if 'expires_in' in token_json:
-					fortytwotoken_obj.access_expires_at = timezone.now() + datetime.fromtimestamp(int(token_json['expires_in']))
-				print('second return')
-				return True
-		fortytwotoken_obj.delete()
-	except FortyTwoToken.DoesNotExist:
-		pass
-	print('third return')
-	return False
-
-def generate_new_token(code):
-	token_json = acquire_access_token(code=code)
+def save_new_token(code):
+	token_json = acquire_access_token(code)
 	if token_json is None or 'access_token' not in token_json:
 		return None
 	login, image = fetch_user_data(token_json['access_token'])
 	obj = FortyTwoToken()
-	obj.access_token = token_json['access_token']
-	obj.refresh_token = token_json.get('refresh_token', None)
-	obj.login = login
-	if 'created_at' in token_json and 'expires_in' in token_json:
-		obj.access_expires_at = timezone.make_aware(datetime.fromtimestamp(int(token_json['created_at']) + int(token_json['expires_in'])))
 	if 'secret_valid_until' in token_json:
-		expires = datetime.fromtimestamp(int(int(token_json['secret_valid_until'])))
-		obj.secret_expires_at = expires
+		obj.expires_at = datetime.fromtimestamp(int(token_json['secret_valid_until']))
+	else:
+		obj.expires_at = timezone.now() + timezone.timedelta(days=7)
 	obj.save()
-	return {'name' : 'fortytwotoken', 'value' : obj.uid, 'expires' : obj.secret_expires_at}
+	try:
+		player = Player.objects.get(login_42=login)
+	except Player.DoesNotExist:
+		player = Player()
+		player.login_42 = login
+		player.pic = image
+	player.token_42 = obj
+	player.save()
+	print(f'value: {obj.uid}, expires: {obj.expires_at}')
+	return {'value' : obj.uid, 'expires' : obj.expires_at}
 
 def auth(request):
-	if is_token_valid(request.COOKIES):
-		return HttpResponse('TOKEN VALID')
+	if request.COOKIES and 'fortytwotoken' in request.COOKIES and is_token_valid(request.COOKIES['fortytwotoken']):
+		fortytwotoken_obj = FortyTwoToken.objects.get(pk=request.COOKIES['fortytwotoken'])
+		player = Player.objects.get(token_42=fortytwotoken_obj)
+		return render(request, 'profil.html', {'username' : player.login_42, 'pic' : player.pic})
+	auth_method = request.GET.get('auth_method', None)
 	code = request.GET.get('code', None)
+	if auth_method !='fortytwo' and not code:
+		return render(request, 'auth.html')
 	if code is None or not code:
 		return request_42_access()
-	result = generate_new_token(code)
-	response = HttpResponse('Successfully acquired access token')
-	response.set_cookie(result['name'], value=result['value'], expires=result.get('expires'))
+	cookie = save_new_token(code)
+	if cookie is None:
+		return HttpResponse('Big problem')
+	response = redirect(request.path)
+	response.set_cookie('fortytwotoken', value=cookie['value'], expires=cookie['expires'])
 	return response
 
-def me(request):
-	if 'fortytwotoken' in request.COOKIES:
-		obj = FortyTwoToken.objects.get(pk=request.COOKIES['fortytwotoken'])
-		return render(request, 'me.html', {'login' : obj.login})
-	return render(request, 'me.html')
-	
+def auth_page(request):
+	return render(request, 'auth.html')

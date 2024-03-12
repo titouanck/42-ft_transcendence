@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<title>Authentification page</title>
+{% endblock %}
+
+{% block content %}
+<div style="height: 200px;"></div>
+<div id="forms" style="display: flex; justify-content: center; align-items: end;">
+	<form>
+		<div class="form-group">
+			<label for="exampleInputEmail1">Email address</label>
+			<input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter email">
+			<small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+		</div>
+		<div class="form-group">
+			<label for="exampleInputPassword1">Password</label>
+			<input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">
+		</div>
+		<div class="form-check">
+		</div>
+		<button type="button" class="btn btn-primary" style="width: 100%;">Register</button>
+	</form>
+	<div style="width: 100px;"></div>
+	<button type="submit" class="btn btn-primary" id="connect-with-fortytwo" style="background-color: rgb(0, 186, 188); border: 0; height: fit-content;">Sign in with 42</button>
+	<div style="width: 100px;"></div>
+	<form>
+		<div class="form-group">
+			<label for="exampleInputEmail1">Email address</label>
+			<input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter email">
+			<small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+		</div>
+		<div class="form-group">
+			<label for="exampleInputPassword1">Password</label>
+			<input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">
+		</div>
+		<div class="form-check">
+		</div>
+		<button type="button" class="btn btn-primary" style="width: 100%;">Sign in</button>
+	</form>
+</div>
+{% endblock %}
+
+{% block end %}
+<script src="{% static 'auth.js' %}"></script>
+{% endblock %}

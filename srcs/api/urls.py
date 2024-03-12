@@ -20,5 +20,5 @@ from . import views
 
 urlpatterns = [
     path('', views.auth),
-    path('me/', views.me),
+    path('auth', views.auth_page),
 ]
