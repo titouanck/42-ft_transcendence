@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block head %}
+<title>PONG</title>
+<link rel="stylesheet" href="{% static 'css/fonts/Prompt.css' %}">
+<link rel="stylesheet" href="{% static 'css/fonts/Plus-Jakarta-Sans.css' %}">
+<link rel="stylesheet" href="{% static 'css/topbar.css' %}">
+<script src="{% static 'js/topbar.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<header>
+	<p class="prompt-extrabold-italic block left gradient-text" id="logo-name">PONG</p>
+	<div class="right Plus-Jakarta-Sans-400 not-connected">
+		<p class=" button-signin">sign in</p>
+		<div class="container-connectwith42">
+			<p class=" button-connectwith42">CONNECT WITH&nbsp;</p>
+			<img class="img-connectwith42" src="{% static 'img/42.png' %}" alt="">
+		</div>
+	</div>
+	<!-- <div class="right Plus-Jakarta-Sans-400 connected">
+		<p>Account</p>
+		<p>Logout</p>
+	</div> -->
+</header>
+{% endblock %}

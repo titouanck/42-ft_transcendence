@@ -101,3 +101,9 @@ def auth(request):
 
 def auth_page(request):
 	return render(request, 'auth.html')
+
+def topbar(request):
+	return render(request, 'topbar.html')
+
+def bento(request):
+	return render(request, 'bento.html')

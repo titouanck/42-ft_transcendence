@@ -21,4 +21,6 @@ from . import views
 urlpatterns = [
     path('', views.auth),
     path('auth', views.auth_page),
+    path('topbar', views.topbar),
+    path('bento', views.bento),
 ]

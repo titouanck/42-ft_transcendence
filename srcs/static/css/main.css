@@ -1,0 +1,52 @@
+:root {
+	--color-white: #f4f4f4;
+    --color-green: #c5f44d;
+    --color-green-g: linear-gradient(180deg,#e7fb59,#b4fd50);
+    --color-pink: #efb8fa;
+    --color-pink-g: linear-gradient(180deg,#ee7ae1,#f0b8fb);
+    --color-purple: #833adf;
+    --color-blue: #68e1ea;
+    --color-blue-g: linear-gradient(0deg,#69e0e9 -1.25%,#d1d3d4 101.25%);
+    --color-dark-blue: #0060ff;
+    --color-gold: #c28f2b;
+    --color-orange: #f77514;
+    --color-dark-grey: #383838;
+    --color-light-grey: #eaeaea;
+    --color-light-blue: #b5e1f4;
+	--color-42: rgb(0, 186, 188);
+}
+
+/* ************************************************************************** */
+
+p {
+	margin: 0;
+	padding: 0;
+}
+
+.block {
+	display: block;
+}
+
+.gradient-text-pink {
+    background-image: var(--color-pink-g);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* ************************************************************************** */
+
+@keyframes rotateAnimation {
+    from {
+        transform: rotate(0deg);
+		transition-timing-function: ease-in-out;
+    }
+    to {
+        transform: rotate(360deg);
+		transition-timing-function: ease-in-out;
+    }
+}
+
+.rotateAnimation {
+	animation: rotateAnimation 1s;
+}
