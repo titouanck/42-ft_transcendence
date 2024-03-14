@@ -2,25 +2,49 @@
 {% load static %}
 {% block head %}
 <title>PONG</title>
-<link rel="stylesheet" href="{% static 'css/fonts/Prompt.css' %}">
-<link rel="stylesheet" href="{% static 'css/fonts/Plus-Jakarta-Sans.css' %}">
 <link rel="stylesheet" href="{% static 'css/topbar.css' %}">
 <script src="{% static 'js/topbar.js' %}"></script>
+<script src="{% static 'js/auth.js' %}"></script>
+<script src="{% static 'js/alert.js' %}"></script>
+{% endblock %}
+
+{% block alert %}
+{% if alert_message %}
+<div class="page-width alert flex flex-row align-center justify-center">
+	<span class="font-medium ">{{alert_message}}</span>
+	<img src="{% static 'img/cross.svg' %}" alt="">
+</div>
+{% endif %}
 {% endblock %}
 
 {% block content %}
 <header>
-	<p class="prompt-extrabold-italic block left gradient-text" id="logo-name">PONG</p>
-	<div class="right Plus-Jakarta-Sans-400 not-connected">
-		<p class=" button-signin">sign in</p>
-		<div class="container-connectwith42">
-			<p class=" button-connectwith42">CONNECT WITH&nbsp;</p>
-			<img class="img-connectwith42" src="{% static 'img/42.png' %}" alt="">
+	<a href="">
+		<button id="logo" class="left glass">
+			<span id="logo-name" class="prompt font-extrabold font-italic text-pink-g">PONG</span>
+		</button>
+	</a>
+{% if not_connected %}
+	<div class="right not-connected flex flex-row">
+		<div class="container">
+			<button id="button-signin-42" class="button-signin futurapt flex flex-row text-white no-border font-bold bg-black">
+				<span class="uppercase">Sign in with&nbsp;</span>
+				<img src="{% static 'img/42.svg' %}" alt="École 42 logo">
+			</button>
+		</div>
+		<div class="margin-light"></div>
+		<div class="container">
+			<button id="button-signin-normal" class="button-signin futurapt flex flex-row text-white no-border font-bold bg-42">
+				<span class="uppercase">Log in</span>
+			</button>
 		</div>
 	</div>
-	<!-- <div class="right Plus-Jakarta-Sans-400 connected">
-		<p>Account</p>
-		<p>Logout</p>
-	</div> -->
+	{% elif connected %}
+	<div class="right connected flex flex-row">
+		<button id="button-logout" class="button-signin futurapt flex flex-row text-soft-white no-border font-semibold bg-dark-grey">
+			<img src="{% static 'img/logout.svg' %}" alt="École 42 logo">
+		</button>
+	</div>
+	{% endif %}
 </header>
 {% endblock %}

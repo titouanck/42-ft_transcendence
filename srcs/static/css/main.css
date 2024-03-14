@@ -1,42 +1,73 @@
-:root {
-	--color-white: #f4f4f4;
-    --color-green: #c5f44d;
-    --color-green-g: linear-gradient(180deg,#e7fb59,#b4fd50);
-    --color-pink: #efb8fa;
-    --color-pink-g: linear-gradient(180deg,#ee7ae1,#f0b8fb);
-    --color-purple: #833adf;
-    --color-blue: #68e1ea;
-    --color-blue-g: linear-gradient(0deg,#69e0e9 -1.25%,#d1d3d4 101.25%);
-    --color-dark-blue: #0060ff;
-    --color-gold: #c28f2b;
-    --color-orange: #f77514;
-    --color-dark-grey: #383838;
-    --color-light-grey: #eaeaea;
-    --color-light-blue: #b5e1f4;
-	--color-42: rgb(0, 186, 188);
-}
+@import url("colors.css");
+@import url("fonts.css");
 
 /* ************************************************************************** */
-
-p {
-	margin: 0;
-	padding: 0;
-}
 
 .block {
 	display: block;
 }
 
-.gradient-text-pink {
-    background-image: var(--color-pink-g);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+.flex {
+    display: flex;
+}
+
+.flex-row {
+    flex-direction: row;
+}
+
+.flex-row-reverse {
+    flex-direction: row-reverse;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+.align-center {
+    align-items: center;
+}
+
+.no-border {
+    border: 0;
+}
+
+button:hover {
+	cursor: pointer;
+}
+
+.connected img {
+    max-height: 2rem;
+}
+
+.display-none {
+    display: none;
+}
+
+.absolute {
+    position: absolute;
+}
+
+.relative {
+    position: relative;
+}
+
+.page-width {
+    width: 100vw;
+}
+
+.page-height {
+    height: 100vw;
 }
 
 /* ************************************************************************** */
 
-@keyframes rotateAnimation {
+.uppercase {
+    text-transform: uppercase;
+}
+
+/* ************************************************************************** */
+
+@keyframes animation-rotate360 {
     from {
         transform: rotate(0deg);
 		transition-timing-function: ease-in-out;
@@ -47,6 +78,6 @@ p {
     }
 }
 
-.rotateAnimation {
-	animation: rotateAnimation 1s;
+.animation-rotate360 {
+	animation: animation-rotate360 1s;
 }

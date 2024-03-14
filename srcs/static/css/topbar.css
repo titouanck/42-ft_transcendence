@@ -1,77 +1,71 @@
-:root {
-	--color-white: #f4f4f4;
-    --color-green: #c5f44d;
-    --color-green-g: linear-gradient(180deg,#e7fb59,#b4fd50);
-    --color-pink: #efb8fa;
-    --color-pink-g: linear-gradient(180deg,#ee7ae1,#f0b8fb);
-    --color-purple: #833adf;
-    --color-blue: #68e1ea;
-    --color-blue-g: linear-gradient(0deg,#69e0e9 -1.25%,#d1d3d4 101.25%);
-    --color-dark-blue: #0060ff;
-    --color-gold: #c28f2b;
-    --color-orange: #f77514;
-    --color-dark-grey: #383838;
-    --color-light-grey: #eaeaea;
-    --color-light-blue: #b5e1f4;
-	--color-42: rgb(0, 186, 188);
-}
-
-p {
-	margin: 0;
-	padding: 0;
-}
-
-@keyframes rotateAnimation {
-    from {
-        transform: rotate(0deg);
-		transition-timing-function: ease-in-out;
-    }
-    to {
-        transform: rotate(360deg);
-		transition-timing-function: ease-in-out;
-    }
-}
-
-.rotateAnimation {
-	animation: rotateAnimation 1s;
-}
-
-.gradient-text {
-    background-image: var(--color-pink-g);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-}
 
 /* ************************************************************************** */
 
+body {
+	background-color: var(--color-dark-grey);
+}
+
 header {
+	z-index: 1;
 	margin: 3rem;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	position: relative;
+}
+
+.alert {
+	font-size: 1.25rem;
+	height: 2.45rem;
+	z-index: 100;
+    position: absolute;
+	top: 0;
+	left: 0;
+    /* padding: 0.75rem 1.25rem; */
+	color: #721c24;
+    background-color: #f8d7da;
+}
+
+.alert img {
+	position: absolute;
+	right: 1rem;
+	height: 2rem;
+}
+
+.alert img:hover {
+	cursor: pointer;
 }
 
 #logo-name {
 	font-size: 2rem;
 }
 
-header .middle, header .right {
-	font-size: 1.1875rem;
-	height: fit-content;
-	display: flex;
-}
-
-header .container-connectwith42 {
-	display: flex;
+.button-signin {
+	padding: .25rem .5rem;
 	align-items: center;
-	height: fit-content;
-	margin-right: 1rem;
+	border-radius: 5px;
 }
 
-.img-connectwith42 {
-	height: 1.1875rem;
+.margin-light {
+	margin-left: .4rem;
 }
 
+.button-signin span {
+	font-size: 2rem;
+}
 
+.button-signin img {
+	width: 2rem;
+	/* width: 1.2rem; */
+	filter: invert(1);
+}
+
+.glass{
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 5px;
+    border:1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
 
