@@ -1,93 +1,70 @@
 import os, requests, json
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from urllib.parse import urlencode
 from datetime import datetime
-from .models import FortyTwoToken, Player
+from app.models import Player, Pongtoken
+from django.views.decorators.csrf import csrf_exempt
+import re
 
-def is_token_valid(cookie):
-	try:
-		fortytwotoken_obj = FortyTwoToken.objects.get(pk=cookie)
-		Player.objects.get(token_42=fortytwotoken_obj)
-		print(f'current time : {timezone.now()}')
-		print(f'expires at : {fortytwotoken_obj.expires_at}')
-		if timezone.now() < fortytwotoken_obj.expires_at:
-			return True
-		else:
-			print('is_token_valid returns else')
-	except Exception as e:
-		pass
+def is_slug(s):
+    pattern = r'^[a-z0-9]+(?:-[a-z0-9]+)*$'
+    return re.match(pattern, s) is not None
+
+def is_username_available(username):
+	print(f'|{username}|')
+	if username:
+		username = username.lower()
+		try:
+			Player.objects.get(username=username)
+		except Exception as e:
+			if len(username) >= 1 and len(username) <= 12 and is_slug(username):
+				return True
 	return False
 
-def acquire_access_token(code, redirect_uri):
-	url = 'https://api.intra.42.fr/oauth/token'
-	params = {
-		'grant_type' : 'authorization_code',
-		'client_id' : os.environ['CLIENT_ID'],
-		'client_secret' : os.environ['CLIENT_SECRET'],
-		'code' : code,
-		'redirect_uri' : redirect_uri,
-	}
-	response = requests.post(url, json = params)
-	if response.status_code != 200:
-		print(response.content)
-		return response.status_code, None
-	return response.status_code, json.loads(response.content)
+def is_email_available(email):
+	if email:
+		try:
+			Player.objects.get(email=email)
+		except Exception as e:
+			regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+			if re.match(regex, email):
+				return True
+	return False
 
-def fetch_user_data(access_token):
-	url = 'https://api.intra.42.fr/v2/me'
-	headers = {
-		'Authorization' : f'Bearer {access_token}'
-	}
-	response = requests.get(url, headers = headers)
-	if response.status_code != 200:
-		return None
-	response_json = json.loads(response.content)
-	login = response_json.get('login', None)
-	image = response_json.get('image', {}).get('link', None)
-	return login, image
+@csrf_exempt
+def check_availability(request):
+	dict = {}
+	username = request.GET.get('username', None)
+	if username:
+		dict['username-available'] = is_username_available(username)
+	email = request.GET.get('email', None)
+	if email:
+		dict['email-available'] = is_email_available(email)
+	return  JsonResponse(dict)
 
-def save_new_token(code, redirect_uri):
-	status, token_json = acquire_access_token(code, redirect_uri)
-	if status != 200:
-		return False, f"Error {status} returned by the 42 api"
-	elif 'access_token' not in token_json:
-		return False, "Missing access_token in response from the 42 api"
-	login, image = fetch_user_data(token_json['access_token'])
-	obj = FortyTwoToken()
-	if 'secret_valid_until' in token_json:
-		obj.expires_at = datetime.fromtimestamp(int(token_json['secret_valid_until']))
-	else:
-		obj.expires_at = timezone.now() + timezone.timedelta(days=7)
-	obj.save()
+@csrf_exempt
+def change_user_info(request):
+	pongtoken = request.POST.get('access_token', None)
 	try:
-		player = Player.objects.get(login_42=login)
-	except Player.DoesNotExist:
-		player = Player()
-		player.login_42 = login
-		player.pic = image
-	player.token_42 = obj
-	player.save()
-	print(f'value: {obj.uid}, expires: {obj.expires_at}')
-	return True, {'value' : obj.uid, 'expires' : obj.expires_at}
-
-def auth_page(request):
-	return render(request, 'auth.html')
-
-def topbar(request):
-	code = request.GET.get('code', None)
-	if not code:
-		if request.COOKIES and 'pongtoken' in request.COOKIES and is_token_valid(request.COOKIES['pongtoken']):
-			return render(request, 'topbar.html', {'connected' : True})
-		else:
-			return render(request, 'topbar.html', {'not_connected' : True})
-	status, cookie = save_new_token(code, request.build_absolute_uri(request.path))
-	if status is False:
-		return render(request, 'topbar.html', {'not_connected' : True, 'alert_message' : cookie})
-	response = redirect(request.path)
-	response.set_cookie('pongtoken', value=cookie['value'], expires=cookie['expires'])
-	return response
-
-def bento(request):
-	return render(request, 'bento.html')
+		pongtoken_obj = Pongtoken.objects.get(pk=pongtoken)
+		user = Player.objects.get(pongtoken=pongtoken_obj)
+	except Pongtoken.DoesNotExist or Player.DoesNotExist:
+		return JsonResponse({'error': f'Missing or invalid token {pongtoken}, who are you?'}, status=403)
+	username = request.POST.get('username', None)
+	if username:
+		username = username.lower().strip()
+		if username != user.username and not is_username_available(username):
+			return JsonResponse({'error': f'Conflict: username {username} not available'}, status=409)
+		user.username = username
+		user.save()
+		return JsonResponse({'changed' : 'username'}, status=200)
+	email = request.POST.get('email', None)
+	if email:
+		if email != user.email and not is_email_available(email):
+			return JsonResponse({'error': f'Conflict: email {email} not available'}, status=409)
+		user.email = email
+		user.save()
+		return JsonResponse({'changed' : 'email'}, status=200)
+	return JsonResponse({'changed' : ''}, status=200)

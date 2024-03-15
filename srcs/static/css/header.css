@@ -1,0 +1,131 @@
+header {
+	/* background-color: red; */
+	height: var(--header-height);
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	position: relative;
+	border-radius: var(--border-radius-one)
+}
+
+.button-signin {
+	margin: 0 .25rem;
+	height: var(--header-height);
+	padding: 0 .75rem;
+	align-items: center;
+	border-radius: var(--border-radius-one)
+}
+
+.button-signin span {
+	font-size: calc(var(--header-height) / 1.8);
+}
+
+#button-signin-42 img, #button-logout img {
+	filter: invert(1);
+}
+
+#button-logout {
+	margin: 0;
+}
+
+.header-height {
+	height: var(--header-height);
+	font-size: var(--header-height);
+}
+
+.smaller-header-height {
+	height: calc(var(--header-height) / 1.8);
+	font-size: calc(var(--header-height) / 1.8);
+}
+
+.user-profile-pic {
+	display: block;
+	border-radius: var(--border-radius-one);
+}
+
+.player-info-rank {
+	margin-right: .4rem;
+}
+
+#user-rank {
+	height: calc(var(--header-height) * 0.75);
+}
+
+#user-rankandusername input {
+	background-color: transparent;
+	height: 100%;
+	font-size: calc(var(--header-height) / 1.8);
+	border:1px solid #cccccc
+}
+
+#user-rankandusername input:focus {
+	outline-width: 0;
+	border: 0;
+}
+
+@media screen and (max-width: 629px) {
+	header .left {
+		display: none;
+	}
+
+	header .right {
+		width: 100vw;
+	}
+
+	.right.connected {
+		text-align: center;
+		justify-content: space-between;
+	}
+
+	.button-signin {
+		text-align: center;
+		justify-content: center;
+	}
+
+	#button-signin-42 {
+		flex: 2.35;
+	}
+
+	#button-signin-normal {
+		flex: 1;
+	}
+}
+
+@media screen and (max-width: 629px) and (min-width: 440px) {
+	#button-signin-42 {
+		flex: 2.35;
+	}
+
+	#button-signin-normal {
+		flex: 1;
+	}
+}
+
+@media screen and (max-width: 439px) {
+	header .right.not-connected {
+		flex-direction: row-reverse;
+	}
+
+	#button-signin-42 span {
+		display: none;
+	}
+
+	#button-signin-42 {
+		width: fit-content;
+	}
+
+	#button-signin-normal {
+		flex: 1;
+	}
+
+	.user-profile-pic {
+		display: none;
+	}
+}
+
+@media screen and (max-width: 325px) {
+	#user-rank {
+		display: none;
+	}
+}

@@ -19,6 +19,8 @@ from django.urls import path, include
 from . import views
 
 urlpatterns = [
-    path('topbar', views.topbar),
-    path('bento', views.bento),
+    # path('topbar', views.topbar),
+    # path('bento', views.bento),
+    path('check-availability', views.check_availability),
+    path('change-user-info', views.change_user_info),
 ]

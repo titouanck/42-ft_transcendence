@@ -162,3 +162,8 @@
 .bg-42 {
     background-color: var(--color-42);
 }
+
+.bg-none {
+    background: none;
+    border: 0;
+}

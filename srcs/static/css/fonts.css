@@ -40,6 +40,12 @@
     font-weight: 900;
 }
 
+@font-face {
+    font-family: 'Burbank Big Regular Black';
+    src: url("../fonts/BurbankBigRegularBlack/BurbankBigRegularBlack.otf") format('truetype');
+    font-weight: 900;
+}
+
 /* ************************************************************************** */
 
 :root {
@@ -58,6 +64,11 @@
 
 .plus-jakarta-sans {
 	font-family: "Plus Jakarta Sans", sans-serif;
+	font-optical-sizing: auto;
+}
+
+.burbank-big-regular-black {
+	font-family: "Burbank Big Regular Black", "Plus Jakarta Sans", sans-serif;
 	font-optical-sizing: auto;
 }
 

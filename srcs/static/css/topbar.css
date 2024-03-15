@@ -1,71 +1,110 @@
+@import url("alerts.css");
+@import url("header.css");
 
 /* ************************************************************************** */
 
+:root {
+	--header-height: 2.5rem;
+	--border-radius-one: .4rem;
+}
+
+.pong {
+	margin-right: .3rem;
+	background-image: url(../img/pong.png);
+	background-repeat: no-repeat;
+	background-size: contain;
+	background-position: center;
+}
+
+.socials {
+	flex: 1;
+}
+
+@media screen and (min-width: 1140px) {
+	.pong {
+		width: 50rem;
+		height: calc(50rem /4 *3);
+		margin-right: .3rem;
+	}
+}
+
+@media screen and (max-width: 1139px) and (min-width: 1020px) {
+	.pong {
+		width: 45rem;
+		height: calc(45rem /4 *3);
+		margin-right: .3rem;
+	}
+}
+
+@media screen and (max-width: 1019px) and (min-width: 955px) {
+	.pong {
+		width: 40rem;
+		height: calc(40rem /4 *3);
+		margin-right: .3rem;
+	}
+}
+
+@media screen and (max-width: 955px) {
+	main {
+		flex-direction: column;
+	}
+	.pong {
+		width: calc(100vw - (2.75rem * 2));
+		height: calc((100vw - (2.75rem * 2)) / 4 * 3);
+		margin-right: .3rem;
+	}
+}
+
+@media screen and (min-width: 630px) {
+	body {
+		padding: 2.75rem;
+	}
+
+	header {
+		margin-bottom: 2.75rem;
+	}
+}
+
+@media screen and (max-width: 629px) and (min-width: 325px) {
+	body {
+		padding: 2rem 1.5rem;
+	}
+
+	header {
+		margin-bottom: 1.5rem;
+	}
+}
+
+@media screen and (max-width: 324px) {
+	body {
+		padding: 2rem .75rem;
+	}
+
+	header {
+		margin-bottom: .75rem;
+	}
+}
+
 body {
-	background-color: var(--color-dark-grey);
-}
-
-header {
-	z-index: 1;
-	margin: 3rem;
 	display: flex;
-	align-items: center;
-	justify-content: space-between;
+	flex-direction: column;
 	position: relative;
+	background-color: #1c1c1c;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
-.alert {
-	font-size: 1.25rem;
-	height: 2.45rem;
-	z-index: 100;
-    position: absolute;
-	top: 0;
-	left: 0;
-    /* padding: 0.75rem 1.25rem; */
-	color: #721c24;
-    background-color: #f8d7da;
+/* .left-container {
+	display: flex;
+	flex-direction: column;
 }
 
-.alert img {
-	position: absolute;
-	right: 1rem;
-	height: 2rem;
+.players-info {
+	flex: .3;
 }
 
-.alert img:hover {
-	cursor: pointer;
-}
-
-#logo-name {
-	font-size: 2rem;
-}
-
-.button-signin {
-	padding: .25rem .5rem;
-	align-items: center;
-	border-radius: 5px;
-}
-
-.margin-light {
-	margin-left: .4rem;
-}
-
-.button-signin span {
-	font-size: 2rem;
-}
-
-.button-signin img {
-	width: 2rem;
-	/* width: 1.2rem; */
-	filter: invert(1);
-}
-
-.glass{
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-radius: 5px;
-    border:1px solid rgba(255, 255, 255, 0.18);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-}
+.pong-game {
+	background-image: url("../img/pong.png");
+} */
 

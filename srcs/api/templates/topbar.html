@@ -5,46 +5,65 @@
 <link rel="stylesheet" href="{% static 'css/topbar.css' %}">
 <script src="{% static 'js/topbar.js' %}"></script>
 <script src="{% static 'js/auth.js' %}"></script>
-<script src="{% static 'js/alert.js' %}"></script>
 {% endblock %}
 
+<!-- {% if alert_message %} -->
 {% block alert %}
-{% if alert_message %}
-<div class="page-width alert flex flex-row align-center justify-center">
-	<span class="font-medium ">{{alert_message}}</span>
+<!-- <div class="page-width alert flex flex-row align-center justify-center">
+	<span class="font-medium ">aaa{{alert_message}}</span>
 	<img src="{% static 'img/cross.svg' %}" alt="">
-</div>
-{% endif %}
+</div> -->
 {% endblock %}
+<!-- {% endif %} -->
 
 {% block content %}
-<header>
-	<a href="">
-		<button id="logo" class="left glass">
-			<span id="logo-name" class="prompt font-extrabold font-italic text-pink-g">PONG</span>
+<header id="header" class="grid header-height">
+	<a class="left" href="">
+		<button id="logo" class="left bg-none">
+			<span id="logo-name" class="header-height prompt font-extrabold font-italic text-pink-g">PONG</span>
 		</button>
 	</a>
-{% if not_connected %}
+	{% if not_connected %}
 	<div class="right not-connected flex flex-row">
-		<div class="container">
-			<button id="button-signin-42" class="button-signin futurapt flex flex-row text-white no-border font-bold bg-black">
-				<span class="uppercase">Sign in with&nbsp;</span>
-				<img src="{% static 'img/42.svg' %}" alt="École 42 logo">
-			</button>
-		</div>
-		<div class="margin-light"></div>
-		<div class="container">
-			<button id="button-signin-normal" class="button-signin futurapt flex flex-row text-white no-border font-bold bg-42">
-				<span class="uppercase">Log in</span>
-			</button>
-		</div>
+		<button id="button-signin-42" class="button-signin futurapt flex flex-row text-white no-border font-bold bg-black">
+			<span class="uppercase">Sign in with&nbsp;</span>
+			<img class="smaller-header-height" src="{% static 'img/42.svg' %}" alt="École 42 logo">
+		</button>
+		<button id="button-signin-normal" class="button-signin futurapt flex flex-row text-white no-border font-bold bg-42">
+			<span class="uppercase">Log in</span>
+		</button>
 	</div>
 	{% elif connected %}
 	<div class="right connected flex flex-row">
-		<button id="button-logout" class="button-signin futurapt flex flex-row text-soft-white no-border font-semibold bg-dark-grey">
-			<img src="{% static 'img/logout.svg' %}" alt="École 42 logo">
+		<div class="user-info flex flex-row align-center">
+			<img id="user-info-pic-img" class="pointer user-profile-pic header-height" src="{{ profile_pic }}" alt="profile-pic">
+			<input id="user-info-pic-input" class="img-container-input" type="file" id="file-input" style="display: none;" accept="image/*" onchange="handleFileUpload(event)">
+			<div id="user-rankandusername" class="button-signin glass flex flex-row justify-center align-center">
+				<img id="user-rank" class="player-info-rank" src="{% static rank %}" alt="rank">
+				<span id="user-username" class="small-header-height text-white uppercase burbank-big-regular-black font-bold">{{ username }}</span>
+			</div>
+		</div>
+		<button id="button-logout" class="glass button-signin futurapt flex flex-row text-soft-white no-border font-semibold bg-none">
+			<img class="smaller-header-height" src="{% static 'img/logout.svg' %}" alt="École 42 logo">
 		</button>
 	</div>
 	{% endif %}
 </header>
+<main class="flex">
+	<div class="glass pong"></div>
+	<div class="glass socials"></div>
+</main>
+<!-- <main class="main">
+	<div class="left-container">
+		<div class="players-info">
+
+		</div>
+		<div class="pong-game">
+
+		</div>
+	</div>
+	<div class="right-container">
+
+	</div>
+</main> -->
 {% endblock %}
