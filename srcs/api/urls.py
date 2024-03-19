@@ -1,26 +1,27 @@
-"""
-URL configuration for ft_transcendence project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
 from django.urls import path, include
-from . import views
+from django.shortcuts import redirect
+
+# ############################################### # 
+
+from api.views.endpoints import endpoints
+from api.views.check_availability import check_availability
 
 urlpatterns = [
-    # path('topbar', views.topbar),
-    # path('bento', views.bento),
-    path('check-availability', views.check_availability),
-    path('change-user-info', views.change_user_info),
+	path('', lambda request: redirect('endpoints/')),
+	path('endpoints/', endpoints),
+    path('check_availability/', check_availability),
 ]
+
+from api.views.users.data import data
+from api.views.users.update import update
+
+users = [
+	path('users/<str:userID>/', data),
+	path('users/<str:userID>/update/', update),
+]
+urlpatterns.extend(users)
+
+from api.views.default import defaultAPIView
+
+urlpatterns.append(path('<path:remainder>/', defaultAPIView))

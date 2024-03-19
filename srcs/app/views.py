@@ -1,22 +1,9 @@
 import os, requests, json
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
-from urllib.parse import urlencode
 from datetime import datetime
 from .models import Pongtoken, Player
-
-def is_token_valid(cookie):
-	try:
-		pongtoken_obj = Pongtoken.objects.get(pk=cookie)
-		Player.objects.get(pongtoken=pongtoken_obj)
-		print(f'current time : {timezone.now()}')
-		print(f'expires at : {pongtoken_obj.expires_at}')
-		if timezone.now() < pongtoken_obj.expires_at:
-			return True
-	except Exception as e:
-		pass
-	return False
+import app.functions as func
 
 def acquire_access_token(code, redirect_uri):
 	url = 'https://api.intra.42.fr/oauth/token'
@@ -53,12 +40,11 @@ def save_new_token(code, redirect_uri):
 	elif 'access_token' not in token_json:
 		return False, "Missing access_token in response from the 42 api"
 	login, image = fetch_user_data(token_json['access_token'])
-	obj = Pongtoken()
+	pongtoken = Pongtoken()
 	if 'secret_valid_until' in token_json:
-		obj.expires_at = datetime.fromtimestamp(int(token_json['secret_valid_until']))
+		pongtoken.expires_at = datetime.fromtimestamp(int(token_json['secret_valid_until']))
 	else:
-		obj.expires_at = timezone.now() + timezone.timedelta(days=7)
-	obj.save()
+		pongtoken.expires_at = timezone.now() + timezone.timedelta(days=7)
 	try:
 		player = Player.objects.get(login_42=login)
 	except Player.DoesNotExist:
@@ -66,24 +52,23 @@ def save_new_token(code, redirect_uri):
 		player.login_42 = login
 		player.username = login
 		player.pic = image
-	player.pongtoken = obj
-	player.save()
-	print(f'value: {obj.uid}, expires: {obj.expires_at}')
-	return True, {'value' : obj.uid, 'expires' : obj.expires_at}
+		player.save()
+	pongtoken.user = player
+	pongtoken.save()
+	return True, {'value' : pongtoken.uid, 'expires' : pongtoken.expires_at}
 
 def main_app(request):
 	code = request.GET.get('code', None)
 	if not code:
-		if request.COOKIES and 'pongtoken' in request.COOKIES and is_token_valid(request.COOKIES['pongtoken']):
-			pongtoken_obj = Pongtoken.objects.get(pk=request.COOKIES['pongtoken'])
-			player = Player.objects.get(pongtoken=pongtoken_obj)
-			print("yoo" + player.rank)
-			return render(request, 'topbar.html', {'connected' : True, "profile_pic" : player.pic, "username" : player.username, "rank" : f'img/rank-{player.rank.lower()}.png'})
+		if request.COOKIES and 'pongtoken' in request.COOKIES and func.check_token(request.COOKIES['pongtoken']):
+			pongtoken = Pongtoken.objects.get(pk=request.COOKIES['pongtoken'])
+			player = pongtoken.user
+			return render(request, 'index.html', {'connected' : True, "profile_pic" : player.pic, "username" : player.username, "rank" : f'img/rank-{player.rank.lower()}.png'})
 		else:
-			return render(request, 'topbar.html', {'not_connected' : True})
+			return render(request, 'index.html', {'not_connected' : True})
 	status, cookie = save_new_token(code, request.build_absolute_uri(request.path))
 	if status is False:
-		return render(request, 'topbar.html', {'not_connected' : True, 'alert_message' : cookie})
+		return render(request, 'index.html', {'not_connected' : True, 'alert_message' : cookie})
 	response = redirect(request.path)
 	response.set_cookie('pongtoken', value=cookie['value'], expires=cookie['expires'])
 	return response
