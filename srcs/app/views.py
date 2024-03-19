@@ -72,3 +72,6 @@ def main_app(request):
 	response = redirect(request.path)
 	response.set_cookie('pongtoken', value=cookie['value'], expires=cookie['expires'])
 	return response
+
+def websockets(request):
+	return render(request, 'ws.html')

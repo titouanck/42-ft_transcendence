@@ -1,3 +1,4 @@
 django==4.2
 psycopg[binary]
 requests
+channels==3.0.4

@@ -1,0 +1,26 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+	<link rel="icon" href="{% static 'favicon.ico' %}"/>
+</head>
+<body>
+    <script>
+        const chatSocket = new WebSocket(`ws://${window.location.host}/ws/chat/`);
+
+		chatSocket.onopen = function() {
+		console.log('WebSocket connection established.');
+		const message = {
+			'message': 'Hello, world!'
+		};
+		chatSocket.send(JSON.stringify(message));
+		};
+		chatSocket.onmessage = function(event) {
+		const message = JSON.parse(event.data);
+		console.log('Received message:', message);
+		};
+    </script>
+</body>
+</html>

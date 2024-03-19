@@ -32,6 +32,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+	'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,6 +42,8 @@ INSTALLED_APPS = [
 	'api',
 	'app',
 ]
+
+ASGI_APPLICATION = 'ft_transcendence.asgi.application'
 
 MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',

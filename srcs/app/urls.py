@@ -20,4 +20,5 @@ from . import views
 
 urlpatterns = [
     path('', views.main_app),
+    path('websockets/', views.websockets),
 ]
