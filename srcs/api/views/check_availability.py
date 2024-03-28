@@ -8,12 +8,13 @@ from app.functions import jsonError
 @csrf_exempt
 def check_availability(request):
 	if request.method != 'GET':
-		return jsonError(request, 405, "Method Not Allowed, GET request expected")
+		return jsonError(request, 405, "Method Not Allowed")
+	
 	dict = {}
 	username = request.GET.get('username', None)
 	if username:
-		dict['username_available'] = func.is_username_available(username)
+		dict['username_available'] = func.isUsernameAvailable(username)
 	email = request.GET.get('email', None)
 	if email:
-		dict['email_available'] = func.is_email_available(email)
-	return  JsonResponse(dict, json_dumps_params={'indent': 2})
+		dict['email_available'] = func.isEmailAvailable(email)
+	return JsonResponse(dict, json_dumps_params={'indent': 2})

@@ -51,7 +51,7 @@ def save_new_token(code, redirect_uri):
 		player = Player()
 		player.login_42 = login
 		player.username = login
-		player.pic = image
+		player.image = image
 		player.save()
 	pongtoken.user = player
 	pongtoken.save()
@@ -60,10 +60,10 @@ def save_new_token(code, redirect_uri):
 def main_app(request):
 	code = request.GET.get('code', None)
 	if not code:
-		if request.COOKIES and 'pongtoken' in request.COOKIES and func.check_token(request.COOKIES['pongtoken']):
+		if request.COOKIES and 'pongtoken' in request.COOKIES and func.checkToken(request.COOKIES['pongtoken']):
 			pongtoken = Pongtoken.objects.get(pk=request.COOKIES['pongtoken'])
 			player = pongtoken.user
-			return render(request, 'index.html', {'connected' : True, "profile_pic" : player.pic, "username" : player.username, "rank" : f'img/rank-{player.rank.lower()}.png'})
+			return render(request, 'index.html', {'connected' : True, "profile_pic" : player.image, "username" : player.username, "rank" : f'img/rank-{player.rank.lower()}.png'})
 		else:
 			return render(request, 'index.html', {'not_connected' : True})
 	status, cookie = save_new_token(code, request.build_absolute_uri(request.path))

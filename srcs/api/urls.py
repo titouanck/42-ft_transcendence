@@ -6,22 +6,13 @@ from django.shortcuts import redirect
 
 from api.views.endpoints import endpoints
 from api.views.check_availability import check_availability
+from api.views.users import users
+from api.views.notFound import notFound
 
 urlpatterns = [
 	path('', lambda request: redirect('endpoints/')),
 	path('endpoints/', endpoints),
     path('check_availability/', check_availability),
+	path('users/<str:userID>/', users),
+    path('<path:remainder>/', notFound)
 ]
-
-from api.views.users.data import data
-from api.views.users.update import update
-
-users = [
-	path('users/<str:userID>/', data),
-	path('users/<str:userID>/update/', update),
-]
-urlpatterns.extend(users)
-
-from api.views.default import defaultAPIView
-
-urlpatterns.append(path('<path:remainder>/', defaultAPIView))

@@ -4,22 +4,22 @@ import re
 
 from app.models import Player, Pongtoken
 
-def is_slug(s):
+def isSlug(s):
     pattern = r'^[a-z0-9]+(?:-[a-z0-9]+)*$'
     return re.match(pattern, s) is not None
 
-def is_username_available(username):
+def isUsernameAvailable(username):
 	print(f'|{username}|')
 	if username:
 		username = username.lower()
 		try:
 			Player.objects.get(username=username)
 		except Exception as e:
-			if len(username) >= 1 and len(username) <= 12 and is_slug(username):
+			if len(username) >= 1 and len(username) <= 12 and isSlug(username):
 				return True
 	return False
 
-def is_email_available(email):
+def isEmailAvailable(email):
 	if email:
 		try:
 			Player.objects.get(email=email)
@@ -29,7 +29,7 @@ def is_email_available(email):
 				return True
 	return False
 
-def check_token(cookie):
+def checkToken(cookie):
 	try:
 		pongtoken_obj = Pongtoken.objects.get(pk=cookie)
 		if timezone.now() < pongtoken_obj.expires_at:
@@ -42,6 +42,13 @@ def jsonError(request, code, message):
 	data = {
 		'error' : code,
 		'message' : message,
-		'documentation_url' : f'{request.scheme}://{request.get_host()}/api/endpoints'
+		'documentation_url' : f'{request.scheme}://{request.get_host()}/api/endpoints/'
 	}
 	return JsonResponse(data, status=code, json_dumps_params={'indent': 2})
+
+def formatValidationErrorMessage(e):
+	s = str(e).replace("'", '').replace('“', "").replace('”', "")
+	if len(s) <= 2:
+		return s
+	else:
+		return s[1:-1]

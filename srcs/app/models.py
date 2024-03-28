@@ -4,9 +4,9 @@ from django.utils.translation import gettext_lazy as _
 
 class Player(models.Model):
 	uid = models.UUIDField(primary_key=True, default=uuid4, editable=False, unique=True)
-	admin = models.BooleanField(default=False)
+	operator = models.BooleanField(default=False)
 	username = models.SlugField(max_length=24, unique=True)
-	pic = models.TextField(null=True, blank=True)
+	image = models.TextField(null=True, blank=True)
 	email = models.EmailField(null=True, blank=True)
 	login_42 = models.SlugField(max_length=12, unique=True, null=True, blank=True)
 	

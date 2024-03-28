@@ -8,7 +8,6 @@ function getCookie(cname) {
 	}
 	return null;
 }
-
 function deleteCookie(cname) {
     document.cookie = cname + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/;';
 }
@@ -67,7 +66,7 @@ function changeUsername(span) {
 		
 		if (input.parentNode.style.borderColor == originalBorderColor) {
 			span.textContent = input.value;
-			fetch(`${window.location.origin}/api/users/me/update`, requestOptions)
+			fetch(`${window.location.origin}/api/users/me/update/`, requestOptions)
 				.then(response => response.json())
 				.then(data => {
 					if (!data.updated || !data.updated.includes("username")) {

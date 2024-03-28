@@ -12,5 +12,5 @@ def endpoints(request):
 	format = request.GET.get('format', None)
 	with open(finders.find('json/endpoints.json')) as f:
 		json_data = json.load(f)
-		return JsonResponse(json_data, safe=False, json_dumps_params={'indent': 4})
+		return JsonResponse(json_data, safe=False, json_dumps_params={'indent': 2})
 	return jsonError(request, 500, 'Resource not available')
