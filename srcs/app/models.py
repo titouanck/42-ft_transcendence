@@ -6,7 +6,8 @@ class Player(models.Model):
 	uid = models.UUIDField(primary_key=True, default=uuid4, editable=False, unique=True)
 	operator = models.BooleanField(default=False)
 	username = models.SlugField(max_length=24, unique=True)
-	image = models.TextField(null=True, blank=True)
+	image_url = models.TextField(null=True, blank=True)
+	image = models.ImageField(upload_to='user_data/profile_picture/', null=True, blank=True)
 	email = models.EmailField(null=True, blank=True)
 	login_42 = models.SlugField(max_length=12, unique=True, null=True, blank=True)
 	

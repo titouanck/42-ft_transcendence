@@ -1,7 +1,6 @@
 from django.http import JsonResponse
 from app.models import Player
 from django.views.decorators.csrf import csrf_exempt
-import re
 import app.functions as func
 from app.functions import jsonError
 

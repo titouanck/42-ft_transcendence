@@ -1,24 +1,22 @@
-import requests
+import os
 import json
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from app.models import Player, Pongtoken
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ValidationError
-import app.functions as func
 from app.functions import jsonError, formatValidationErrorMessage
 from PIL import Image
 
 @csrf_exempt
-def users(request, userID):
+def users_image(request, userID):
 	if request.method == 'GET':
-		return users_GET(request, userID)
-	elif request.method == 'PATCH':
-		return users_PATCH(request, userID)
+		return users_image_GET(request, userID)
+	if request.method == 'POST':
+		return users_image_POST(request, userID)
 	else:
 		return jsonError(request, 405, "Method Not Allowed")
 
-
-def users_GET(request, userID):
+def users_image_GET(request, userID):
 	access_token = request.headers.get('Authorization')
 	if access_token:
 		try:
@@ -50,33 +48,19 @@ def users_GET(request, userID):
 		except Exception as e:
 			return jsonError(request, 500, 'Internal server error')
 
-	response = {
-		'uid' : user.uid,
-		'username' : user.username,
-		'status' : user.status,
-		'image_url' : user.image_url,
-		'rank' : user.rank,
-		'elo' : user.elo,
-		'victories' : user.victories,
-		'defeats' : user.defeats,
-	}
 
-	if response['image_url'].startswith('local.'):
-		response['image_url'] = f'{request.scheme}://{request.get_host()}/api/users/{user.uid}/image/'
+	image_data = user.image.read()
+	image_extension = user.image_url[len('local.'):]
+	image_name = f'{user.username}_{user.uid}'
 	
-	if pongtoken and (pongtoken.user.operator or pongtoken.user == user):
-		response['operator'] = user.operator
-		response['email'] = user.email
-		response['login_42'] = user.login_42
-		response['created_at'] = user.created_at
-		response['updated_at'] = user.updated_at
+	response = HttpResponse(image_data, content_type=f"image/{image_extension}")
+	response['Content-Disposition'] = f'inline; filename="{image_name}.{image_extension}"'
+    
+	return response
 
-	return JsonResponse(response, status=200, json_dumps_params={'indent': 2})
-
-
-def users_PATCH(request, userID):
+def users_image_POST(request, userID):
+	
 	try:
-		data = json.loads(request.body.decode('utf-8'))
 		access_token = request.headers.get('Authorization')
 		if not access_token:
 			return jsonError(request, 401, 'Requires authentication: missing authorization token')
@@ -107,18 +91,19 @@ def users_PATCH(request, userID):
 		"updated_fields": [],
 	}
 
-	username = data.get('username', None)
-	if username:
-		username = username.lower().strip()
-		if username != user.username and func.isUsernameAvailable(username):
-			user.username = username
-			response["updated_fields"].append("username")
-	
-	email = data.get('email', None)
-	if email:
-		if email != user.email and func.isEmailAvailable(email):
-			user.email = email
-			response["updated_fields"].append("email")
-	
-	user.save()
+	print(request.FILES)
+	uploaded_image = request.FILES['image']
+	if uploaded_image:
+		try:
+			img = Image.open(uploaded_image)
+			img.verify()
+			original_filename, original_extension = os.path.splitext(uploaded_image.name)
+			new_filename = f'{user.uid}{original_extension}'
+			user.image_url = f'local{original_extension}'
+			user.image.delete()
+			user.image.save(new_filename, uploaded_image)
+			response["updated_fields"].append("image")
+			response["updated_fields"].append("image_url")
+		except Exception as e:
+			return jsonError(request, 400, formatValidationErrorMessage(e))
 	return JsonResponse(response, status=200, json_dumps_params={'indent': 2})

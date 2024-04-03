@@ -1,3 +1,29 @@
+/* ************************************************************************** */
+
+let pongtoken = getCookie('pongtoken');
+let userData;
+
+fetch(`${window.location.origin}/api/users/me/`, {
+	method: 'GET',
+	headers: {
+		'Authorization': `Bearer ${pongtoken}`
+	}
+})
+.then(response => {
+	if (!response.ok) {
+		throw new Error('');
+	}
+	return response.json();
+})
+.then(jsonResponse => {
+	userData = jsonResponse
+	console.log(userData)
+})
+.catch(error => {
+});
+
+/* ************************************************************************** */
+
 function getCookie(cname) {
 	var cookieArr = document.cookie.split(';');
 	for (var i = 0; i < cookieArr.length; i++) {
@@ -8,9 +34,12 @@ function getCookie(cname) {
 	}
 	return null;
 }
+
 function deleteCookie(cname) {
     document.cookie = cname + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/;';
 }
+
+/* ************************************************************************** */
 
 function changeUsername(span) {
 	var input = document.createElement('input');
@@ -84,14 +113,43 @@ function changeUsername(span) {
 	});
 }
 
+/* ************************************************************************** */
+
 function handleFileUpload(event) {
-	const file = event.target.files[0];
-    if (file) {
-        console.log("Nom du fichier:", file.name);
-        console.log("Type du fichier:", file.type);
-        console.log("Taille du fichier:", file.size, "octets");
-    }
+    event.preventDefault();
+    
+    const file = event.target.files[0];
+    if (!file) {
+		return ;
+	}
+
+	const formData = new FormData();
+	formData.append('image', file);
+	console.log(formData)
+	
+	fetch(`${window.location.origin}/api/users/me/image/`, {
+		method: 'POST',
+		headers: {
+			'Authorization': `Bearer ${pongtoken}`
+		},
+		body: formData,
+	})
+	.then(response => {
+		if (!response.ok) {
+			throw new Error(response.body);
+		}
+		return response.json();
+	})
+	.then(jsonResponse => {
+		userData = jsonResponse
+		console.log(userData)
+	})
+	.catch(error => {
+		console.log(error)
+	});
 }
+
+/* ************************************************************************** */
 
 window.addEventListener('load', function () {
 	logo = document.getElementById("logo");
