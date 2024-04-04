@@ -3,24 +3,27 @@
 let pongtoken = getCookie('pongtoken');
 let userData;
 
-fetch(`${window.location.origin}/api/users/me/`, {
-	method: 'GET',
-	headers: {
-		'Authorization': `Bearer ${pongtoken}`
-	}
-})
-.then(response => {
-	if (!response.ok) {
-		throw new Error('');
-	}
-	return response.json();
-})
-.then(jsonResponse => {
-	userData = jsonResponse
-	console.log(userData)
-})
-.catch(error => {
-});
+if (pongtoken) {
+	console.log("yo")
+	fetch(`${window.location.origin}/api/users/me/`, {
+		method: 'GET',
+		headers: {
+			'Authorization': `Bearer ${pongtoken}`
+		}
+	})
+	.then(response => {
+		if (!response.ok) {
+			throw new Error('');
+		}
+		return response.json();
+	})
+	.then(jsonResponse => {
+		userData = jsonResponse
+		console.log(userData)
+	})
+	.catch(error => {
+	});
+}
 
 /* ************************************************************************** */
 
@@ -54,7 +57,7 @@ function changeUsername(span) {
 	input.focus();
 	
 	input.addEventListener('input', function(e) {
-		fetch(`${window.location.origin}/api/check_availability?username=${input.value}`)
+		fetch(`${window.location.origin}/api/check-availability?username=${input.value}`)
 		.then(response => {
 			if (!response.ok) {
 				throw new Error('La requête a échoué.');

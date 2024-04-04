@@ -1,7 +1,6 @@
 # Credentials
 .env
 *.env
-*.json
 
 # Python
 __pycache__/

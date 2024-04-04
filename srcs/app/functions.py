@@ -9,7 +9,6 @@ def isSlug(s):
     return re.match(pattern, s) is not None
 
 def isUsernameAvailable(username):
-	print(f'|{username}|')
 	if username:
 		username = username.lower()
 		try:
@@ -29,11 +28,10 @@ def isEmailAvailable(email):
 				return True
 	return False
 
-def checkToken(cookie):
+def checkToken(pongtoken_uid):
 	try:
-		pongtoken_obj = Pongtoken.objects.get(pk=cookie)
-		if timezone.now() < pongtoken_obj.expires_at:
-			return True
+		pongtoken_obj = Pongtoken.objects.get(pk=pongtoken_uid)
+		return not pongtoken_obj.is_expired()
 	except Exception as e:
 		pass
 	return False

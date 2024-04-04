@@ -1,0 +1,55 @@
+[
+	{
+		"error" : "Not up to date!"
+	},
+	{
+		"endpoint": "/endpoints",
+		"headers": [],
+		"parameters": [],
+		"method": "GET",
+		"description": "List all endpoints of the API."
+	},
+	{
+		"endpoint": "/check-availability",
+		"headers": [],
+		"parameters": [
+			{
+				"username" : "desired_username",
+				"required" : false
+			},
+			{
+				"email" : "example@domain.com",
+				"required" : false
+			}
+		],
+		"method": "GET",
+		"description": "Verifies user-related data availability (email, username, etc.) for registration."
+	},
+	{
+		"endpoint": "/users/:userUUID",
+		"headers": [
+			"Authorization: Bearer <token>"
+		],
+		"parameters": [],
+		"method": "GET",
+		"description": "Retrieve user data using UUID identifier or the 'me' keyword for individualized information access."
+	},
+	{
+		"endpoint": "/users/:userUUID/update",
+		"headers": [
+			"Authorization: Bearer <token>"
+		],
+		"parameters": [
+			{
+				"username" : "desired_username",
+				"required" : false
+			},
+			{
+				"email" : "example@domain.com",
+				"required" : false
+			}
+		],
+		"method": "POST",
+		"description": "Updates user data using UUID identifier or the 'me' key-word for seamless modifications."
+	}
+]

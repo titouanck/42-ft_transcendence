@@ -63,7 +63,8 @@ def main_app(request):
 		if request.COOKIES and 'pongtoken' in request.COOKIES and func.checkToken(request.COOKIES['pongtoken']):
 			pongtoken = Pongtoken.objects.get(pk=request.COOKIES['pongtoken'])
 			player = pongtoken.user
-			return render(request, 'index.html', {'connected' : True, "profile_pic" : player.image_url, "username" : player.username, "rank" : f'img/rank-{player.rank.lower()}.png'})
+			image_url = player.get_image_url(request)
+			return render(request, 'index.html', {'connected' : True, "profile_pic" : image_url, "username" : player.username, "rank" : f'img/ranks/rank-{player.rank.lower()}.png'})
 		else:
 			return render(request, 'index.html', {'not_connected' : True})
 	status, cookie = save_new_token(code, request.build_absolute_uri(request.path))

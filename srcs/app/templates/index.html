@@ -38,7 +38,7 @@
 		<div class="user-info flex flex-row align-center">
 			<img id="user-info-pic-img" class="pointer user-profile-pic header-height" src="{{ profile_pic }}" alt="profile-pic">
 			<form id="imageUploadForm" method="post" enctype="multipart/form-data">
-				<input type="file" name="image" id="user-info-pic-input" style="" accept="image/*" onchange="handleFileUpload(event)">
+				<input type="file" name="image" id="user-info-pic-input" style="display: none;" accept="image/*" onchange="handleFileUpload(event)">
 			</form>
 			<div id="user-rankandusername" class="button-signin glass flex flex-row justify-center align-center">
 				<img id="user-rank" class="player-info-rank" src="{% static rank %}" alt="rank">
