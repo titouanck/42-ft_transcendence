@@ -1,8 +1,12 @@
+from PIL import Image
+import os
+from django.conf import settings
 from django.utils import timezone
 from django.db import models
 from uuid import uuid4
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
+from datetime import datetime
 
 class Player(models.Model):
 	uid = models.UUIDField(primary_key=True, default=uuid4, editable=False, unique=True)
@@ -46,11 +50,37 @@ class Player(models.Model):
 			raise ValidationError("Forbidden username")
 		super().clean()
 
+	def delete_image(self):
+		try:
+			os.remove(self.image.path)
+			self.image.delete()
+		except Exception as e:
+			print(f"Error: {e.strerror}")
+
+	def upload_image(self, uploadedImage):
+		try:
+			img = Image.open(uploadedImage)
+			img.verify()
+			width, height = img.size
+			aspect_ratio = width / height
+			if aspect_ratio < 9/10 or aspect_ratio > 4/3:
+				raise Exception('Image aspect ratio must be between 9:10 and 4:3')
+			original_filename, original_extension = os.path.splitext(uploadedImage.name)
+			timestamp = f"{str(timezone.now()).replace('-', '').replace(' ', '').replace(':', '')[:len('YYYYMMDDHHMMSS')]}UTC"
+			new_filename = f'{self.uid}_{timestamp}{original_extension}'
+			self.image_url = None
+			self.delete_image()
+			self.image.save(new_filename, uploadedImage)
+		except Exception as e:
+			raise e
+
 	def get_image_url(self, request):
-		if self.image_url.startswith('local.'):
+		if self.image:
 			return f'{request.scheme}://{request.get_host()}/api/users/{self.uid}/image/'
-		else:
+		elif self.image_url:
 			return self.image_url
+		else:
+			return None
 		
 	def publicData(self, request):
 		return {

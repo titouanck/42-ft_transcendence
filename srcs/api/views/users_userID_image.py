@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from PIL import Image
 from api.functions import retrieveUserIDs
 from app.functions import jsonError, formatValidationErrorMessage
+from django.utils import timezone
 
 @csrf_exempt
 def users_userID_image(request, userID):
@@ -43,18 +44,10 @@ def _POST(request, userID):
 		"updated_fields": [],
 	}
 
-	uploaded_image = request.FILES['image']
-	if uploaded_image:
+	uploadedImage = request.FILES['image']
+	if uploadedImage:
 		try:
-			img = Image.open(uploaded_image)
-			img.verify()
-			original_filename, original_extension = os.path.splitext(uploaded_image.name)
-			new_filename = f'{target.uid}{original_extension}'
-			target.image_url = f'local{original_extension}'
-			target.image.delete()
-			target.image.save(new_filename, uploaded_image)
-			response["updated_fields"].append("image")
-			response["updated_fields"].append("image_url")
+			target.upload_image(uploadedImage)
 		except Exception as e:
 			return jsonError(request, 400, formatValidationErrorMessage(e))
 	return JsonResponse(response, status=200, json_dumps_params={'indent': 2})
