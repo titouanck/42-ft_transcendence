@@ -22,8 +22,8 @@ def users(request):
 	return JsonResponse(objects, safe=False, json_dumps_params={'indent': 2})
 
 def _filter(players, queryParams):
-	q_main_request = Q()
 	try:
+		q_main_request = Q()
 		if 'uid' in queryParams:
 			q_objects = Q()
 			for param in queryParams['uid']:
@@ -159,8 +159,6 @@ def _filter(players, queryParams):
 				q_objects |= Q(defeats__lte=param)	
 			q_main_request &= q_objects
 
-		print(q_objects)
-		print(q_objects)
 		players = players.filter(q_main_request)
 		if 'order_by' in queryParams:
 			q_objects = Q()

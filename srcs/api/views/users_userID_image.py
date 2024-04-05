@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from PIL import Image
 from api.functions import retrieveUserIDs
 from app.functions import jsonError, formatValidationErrorMessage
-from django.utils import timezone
+from django.shortcuts import redirect
 
 @csrf_exempt
 def users_userID_image(request, userID):
@@ -22,13 +22,16 @@ def _GET(request, userID):
 	requester = content['requester']
 	target = content['target']
 
-	image_data = target.image.read()
-	image_extension = target.image_url[len('local.'):]
-	image_name = f'{target.username}_{target.uid}'
-	
-	response = HttpResponse(image_data, content_type=f"image/{image_extension}")
-	response['Content-Disposition'] = f'inline; filename="{image_name}.{image_extension}"'
-    
+	if target.image:
+		image_data = target.image.read()
+		image_extension = target.image.path.rpartition('.')
+		image_name = f'{target.username}'
+		response = HttpResponse(image_data, content_type=f"image/{image_extension}")
+		response['Content-Disposition'] = f'inline; filename="{image_name}.{image_extension}"'
+	elif target.image_url:
+		response = redirect(target.image_url)
+	else:
+		response = jsonError(request, 404, 'Ressource not found')
 	return response
 
 def _POST(request, userID):
