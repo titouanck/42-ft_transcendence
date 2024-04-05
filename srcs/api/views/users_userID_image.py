@@ -24,7 +24,7 @@ def _GET(request, userID):
 
 	if target.image:
 		image_data = target.image.read()
-		image_extension = target.image.path.rpartition('.')
+		image_extension = target.image.path.rpartition('.')[2]
 		image_name = f'{target.username}'
 		response = HttpResponse(image_data, content_type=f"image/{image_extension}")
 		response['Content-Disposition'] = f'inline; filename="{image_name}.{image_extension}"'

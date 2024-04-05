@@ -99,3 +99,9 @@ class Match(models.Model):
 			'match_winner_uid' : match_winner_uid,
 			'match_looser_uid' : match_looser_uid,
 		}
+	
+# class Tournament_Round(models.Model):
+# 	uid = models.UUIDField(primary_key = True, default = uuid4, editable = False)
+
+# class Tournament(models.Model):
+# 	uid = models.UUIDField(primary_key = True, default = uuid4, editable = False)
