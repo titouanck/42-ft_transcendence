@@ -1,4 +1,5 @@
-from app.models import Player, Pongtoken
+from app.models.Player import Player
+from app.models.Pongtoken import Pongtoken
 from django.core.exceptions import ValidationError
 import app.functions as func
 from app.functions import jsonError, formatValidationErrorMessage

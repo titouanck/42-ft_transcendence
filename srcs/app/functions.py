@@ -2,7 +2,8 @@ from django.utils import timezone
 from django.http import JsonResponse
 import re
 
-from app.models import Player, Pongtoken
+from app.models.Player import Player
+from app.models.Pongtoken import Pongtoken
 
 def isSlug(s):
     pattern = r'^[a-z0-9]+(?:-[a-z0-9]+)*$'
