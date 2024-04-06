@@ -1,5 +1,23 @@
+# Django
 django==4.2
-psycopg[binary]
-requests
+
+# PostgreSQL adapter for Python
+psycopg[binary]==3.1.18
+
+# Python library for sending HTTP requests
+requests==2.31.0
+
+# Extends Django's capabilities beyond HTTP - to handle WebSockets, chat protocols, IoT protocols, and more
 channels==3.0.4
+
+# Image processing library for python
 Pillow==10.3.0
+
+# Django toolkit for building Web APIs
+djangorestframework==3.15.1
+
+# Package for Django REST Framework that provides an implementation of JSON Web Tokens (JWT)
+djangorestframework-simplejwt==5.3.1
+
+# Adds Cross-Origin Resource Sharing (CORS) headers to responses. Allows in-browser requests to your Django application from other origins
+django-cors-headers==4.3.1

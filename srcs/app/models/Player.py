@@ -103,7 +103,7 @@ class Player(models.Model):
 				pass
 			else:
 				new_image = self.profile_picture
-				if old_image != new_image:
+				if old_image and old_image != new_image:
 					if os.path.isfile(old_image.path):
 						os.remove(old_image.path)
 		if self.profile_picture:
