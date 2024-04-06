@@ -1,46 +1,84 @@
+from django.contrib.auth.hashers import make_password, check_password
+from django.core.exceptions import ObjectDoesNotExist
 from PIL import Image
 import os
-from django.utils import timezone
 from django.db import models
 from uuid import uuid4
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
+from .UserPermission import UserPermission
+from django.db.models.signals import post_save
+from django.utils import timezone
+
+from .choices import needed_length
+from .choices import PLAYER_STATUS, PLAYER_STATUS_DEFAULT
+from .choices import PLAYER_RANKS, PLAYER_RANKS_DEFAULT
+
+# **************************************************************************** #
+
+def rename_profile_picture(instance, filename):
+		upload_to = 'user_data/profile_picture/'
+		extension = filename.split('.')[-1]
+		filename = '{}.{}'.format(instance.uid, extension)
+		return os.path.join(upload_to, filename)
+
+def validate_profile_picture(image):
+	try:
+		img = Image.open(image)
+		img.verify()
+		width, height = img.size
+		aspect_ratio = width / height
+		if aspect_ratio < 9/10 or aspect_ratio > 4/3:
+			raise ValidationError('Image aspect ratio must be between 1:1 and 4:3')
+	except Exception as e:
+		raise e
 
 class Player(models.Model):
+	
 	uid = models.UUIDField(primary_key=True, default=uuid4, editable=False, unique=True)
-	operator = models.BooleanField(default=False)
+
+	permissions = models.OneToOneField(UserPermission, on_delete=models.CASCADE, editable=False, related_name='permissions_uid')
+
 	username = models.SlugField(max_length=24, unique=True)
-	image_url = models.TextField(null=True, blank=True)
-	image = models.ImageField(upload_to='user_data/profile_picture/', null=True, blank=True)
+
 	email = models.EmailField(null=True, blank=True)
+
+	profile_picture = models.ImageField(upload_to=rename_profile_picture, validators=[validate_profile_picture], null=True, blank=True)
+
+	profile_picture_url = models.TextField(null=True, blank=True)
+
+	status = models.CharField(max_length=needed_length(PLAYER_STATUS), choices=PLAYER_STATUS, default=PLAYER_STATUS_DEFAULT)
+
+	elo = models.IntegerField(default=-1)
+
+	rank = models.CharField(max_length=needed_length(PLAYER_RANKS), choices=PLAYER_RANKS, default=PLAYER_RANKS_DEFAULT)
+
+	total_victories = models.IntegerField(default=0)
+
+	total_defeats = models.IntegerField(default=0)
+
+	total_matches = models.IntegerField(default=0)
+
 	login_42 = models.SlugField(max_length=12, unique=True, null=True, blank=True)
-	
-	class Status(models.TextChoices):
-		OFFLINE = 'Offline', _('Offline')
-		ONLINE = 'Online', _('Online')
-		PLAYING = 'Playing', _('Playing')
-	status = models.TextField(choices=Status.choices, default=Status.OFFLINE)
-	
-	class Rank(models.TextChoices):
-		UNRANKED = 'UNRANKED', _('UNRANKED')
-		BRONZE = 'BRONZE', _('BRONZE')
-		SILVER = 'SILVER', _('SILVER')
-		GOLD = 'GOLD', _('GOLD')
-		PLATINIUM = 'PLATINIUM', _('PLATINIUM')
-		DIAMOND = 'DIAMOND', _('DIAMOND')
-		ELITE = 'ELITE', _('ELITE')
-		CHAMPION = 'CHAMPION', _('CHAMPION')
-		UNREAL = 'UNREAL', _('UNREAL')
-	rank = models.TextField(choices=Rank.choices, default=Rank.UNRANKED)
-	
-	elo = models.IntegerField(default=0)
-	victories = models.IntegerField(default=0)
-	defeats = models.IntegerField(default=0)
+
+	password = models.CharField(max_length=255, null=True, blank=True)
+
+	password_hash = models.CharField(max_length=255, null=True, blank=True)
+
 	created_at = models.DateTimeField(auto_now_add=True)
+
 	updated_at = models.DateTimeField(auto_now=True)
 
+	# **************************************************************************** #
+
 	def __str__(self):
-		return f'{self.username}, {self.uid}'
+		return f'{self.username}, {self.uid} ({self.rank})'
+
+	def save(self, *args, **kwargs):
+		if self.password and not self.password_hash:
+			self.password_hash = make_password(self.password)
+		self.update_all()
+		super().save(*args, **kwargs)
 	
 	def clean(self):
 		forbidden_usernames = ['me', 'anonymous', 'guest', 'null', 'none']
@@ -48,63 +86,106 @@ class Player(models.Model):
 			raise ValidationError("Forbidden username")
 		super().clean()
 
-	def delete_image(self):
-		try:
-			os.remove(self.image.path)
-			self.image.delete()
-		except Exception as e:
-			print(f"Error: {e.strerror}")
+	# **************************************************************************** #
 
-	def upload_image(self, uploadedImage):
+	def update_permissions(self):
 		try:
-			img = Image.open(uploadedImage)
-			img.verify()
-			width, height = img.size
-			aspect_ratio = width / height
-			if aspect_ratio < 9/10 or aspect_ratio > 4/3:
-				raise Exception('Image aspect ratio must be between 9:10 and 4:3')
-			original_filename, original_extension = os.path.splitext(uploadedImage.name)
-			timestamp = f"{str(timezone.now()).replace('-', '').replace(' ', '').replace(':', '')[:len('YYYYMMDDHHMMSS')]}UTC"
-			new_filename = f'{self.uid}_{timestamp}{original_extension}'
-			self.image_url = None
-			self.delete_image()
-			self.image.save(new_filename, uploadedImage)
-		except Exception as e:
-			raise e
+			self.permissions
+		except ObjectDoesNotExist:
+			self.permissions = UserPermission.objects.create()
 
-	def get_image_url(self, request):
-		if self.image:
-			return f'{request.scheme}://{request.get_host()}/api/users/{self.uid}/image/'
-		elif self.image_url:
-			return self.image_url
+	def update_profile_picture(self):
+		if self.pk:
+			try:
+				old_instance = Player.objects.get(pk=self.pk)
+				old_image = old_instance.profile_picture
+			except Player.DoesNotExist:
+				pass
+			else:
+				new_image = self.profile_picture
+				if old_image != new_image:
+					if os.path.isfile(old_image.path):
+						os.remove(old_image.path)
+		if self.profile_picture:
+			self.profile_picture_url = f'/api/users/{self.uid}/profile_picture/'
+
+	def update_rank(self):
+		min_elo = -1
+		for rank in PLAYER_RANKS:
+			if min_elo < 0:
+				min_elo = 0
+			elif min_elo == 0 and self.elo >= 0:
+				min_elo = 10
+			elif self.elo >= min_elo:
+				min_elo *= 2
+			else:
+				break
+			self.rank = rank[1]
+
+	def update_total_matches(self):
+		self.total_matches = self.total_victories + self.total_defeats
+
+	def update_password(self):
+		if self.password:
+			self.password_hash = make_password(self.password)
+			self.password = None
+
+	def update_all(self):
+		self.update_permissions()
+		self.update_profile_picture()
+		self.update_rank()
+		self.update_password()
+		self.update_total_matches()
+
+	# **************************************************************************** #
+
+	def check_password(self, raw_password):
+		return check_password(raw_password, self.password_hash)
+
+	# **************************************************************************** #
+
+	def get_profile_picture_url(self, request):
+		self.update_profile_picture()
+		if self.profile_picture_url:
+			if self.profile_picture_url[0] == '/':
+				return f'{request.scheme}://{request.get_host()}{self.profile_picture_url}'
+			return self.profile_picture_url
 		else:
 			return None
-		
+
+	# **************************************************************************** #
+
+	def data(self, request):
+		self.update_all()
+		data = {}
+		fields = self._meta.fields
+		for field in fields:
+			field_name = field.name
+			field_value = getattr(self, field_name)
+			data[field_name] = field_value
+		data['profile_picture_url'] = self.get_profile_picture_url(request)
+		del data['permissions']
+		del data['profile_picture']
+		return data
+
 	def publicData(self, request):
-		return {
-			'uid' : self.uid,
-			'username' : self.username,
-			'status' : self.status,
-			'image_url' : self.get_image_url(request),
-			'rank' : self.rank,
-			'elo' : self.elo,
-			'victories' : self.victories,
-			'defeats' : self.defeats,
-		}
+		data = self.data(request)
+		del data['email']
+		del data['login_42']
+		return data
 	
-	def privateData(self, request):
-		return {
-			'uid' : self.uid,
-			'username' : self.username,
-			'status' : self.status,
-			'image_url' : self.get_image_url(request),
-			'rank' : self.rank,
-			'elo' : self.elo,
-			'victories' : self.victories,
-			'defeats' : self.defeats,
-			'operator' : self.operator,
-			'email' :  self.email,
-			'login_42' :  self.login_42,
-			'created_at' :  self.created_at,
-			'updated_at' :  self.updated_at,
-		}
+# 	def privateData(self, request):
+# 		return {
+# 			# 'uid' : self.uid,
+# 			# 'username' : self.username,
+# 			# 'status' : self.status,
+# 			# 'image_url' : self.get_image_url(request),
+# 			# 'rank' : self.rank,
+# 			# 'elo' : self.elo,
+# 			# 'victories' : self.victories,
+# 			# 'defeats' : self.defeats,
+# 			# 'email' :  self.email,
+# 			# 'login_42' :  self.login_42,
+# 			# 'created_at' :  self.created_at,
+# 			# 'updated_at' :  self.updated_at,
+# 		}

@@ -10,11 +10,12 @@ def users(request):
 	if request.method != 'GET':
 		return jsonError(request, 405, "Method Not Allowed")
 
-	queryParams = getQueryParams(request.GET)
-	try:
-		players = _filter(Player.objects.all(), queryParams)
-	except Exception as e:
-		return jsonError(request, 400, formatValidationErrorMessage(e))
+	# queryParams = getQueryParams(request.GET)
+	# try:
+	# 	players = _filter(Player.objects.all(), queryParams)
+	# except Exception as e:
+	# 	return jsonError(request, 400, formatValidationErrorMessage(e))
+	players = Player.objects.all()
 
 	objects = []
 	for player in players:

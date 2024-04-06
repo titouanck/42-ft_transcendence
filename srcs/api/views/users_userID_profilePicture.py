@@ -7,7 +7,7 @@ from app.functions import jsonError, formatValidationErrorMessage
 from django.shortcuts import redirect
 
 @csrf_exempt
-def users_userID_image(request, userID):
+def users_userID_profilePicture(request, userID):
 	if request.method == 'GET':
 		return _GET(request, userID)
 	if request.method == 'POST':
@@ -22,14 +22,14 @@ def _GET(request, userID):
 	requester = content['requester']
 	target = content['target']
 
-	if target.image:
-		image_data = target.image.read()
-		image_extension = target.image.path.rpartition('.')[2]
+	if target.profile_picture:
+		image_data = target.profile_picture.read()
+		image_extension = target.profile_picture.path.rpartition('.')[2]
 		image_name = f'{target.username}'
 		response = HttpResponse(image_data, content_type=f"image/{image_extension}")
 		response['Content-Disposition'] = f'inline; filename="{image_name}.{image_extension}"'
-	elif target.image_url:
-		response = redirect(target.image_url)
+	elif target.profile_picture_url:
+		response = redirect(target.profile_picture_url)
 	else:
 		response = jsonError(request, 404, 'Ressource not found')
 	return response

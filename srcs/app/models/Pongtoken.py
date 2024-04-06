@@ -4,20 +4,35 @@ from uuid import uuid4
 from django.utils.translation import gettext_lazy as _
 from .Player import Player
 
+# **************************************************************************** #
+
 class Pongtoken(models.Model):
 	uid = models.UUIDField(primary_key = True, default = uuid4, editable = False)
 	user = models.ForeignKey(Player, on_delete=models.CASCADE)
-	invalidated = models.BooleanField(default=False)
+	valid = models.BooleanField(default=False)
 	created_at = models.DateTimeField(auto_now_add = True, editable = False)
 	expires_at = models.DateTimeField()
 
-	def is_expired(self):
-		if timezone.now() > self.expires_at or self.invalidated:
-			return True
-		return False
+	# **************************************************************************** #
+	
+	def update_validity(self):
+		if timezone.now() > self.expires_at:
+			self.valid = False
+
+	def invalidate(self):
+		if self.valid:
+			self.expires_at = timezone.now()
+			self.update_validity()
+
+	def is_valid(self):
+		if self.valid:
+			self.update_validity()
+		return self.valid
+
+	# **************************************************************************** #
 
 	def __str__(self):
-		if self.is_expired():
-			return f'{self.uid}, {self.user.username} (expired)'
-		else:
+		if self.is_valid():
 			return f'{self.uid}, {self.user.username} (valid until {self.expires_at})'
+		else:
+			return f'{self.uid}, {self.user.username} (expired)'
