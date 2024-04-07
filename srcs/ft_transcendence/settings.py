@@ -32,9 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 	'rest_framework',
 	'rest_framework_simplejwt.token_blacklist',
-	# 'corsheaders',
 	'app',
-	'api',
 ]
 
 REST_FRAMEWORK = {
@@ -52,7 +50,7 @@ SIMPLE_JWT = {
     "UPDATE_LAST_LOGIN": False,
 
     "ALGORITHM": "HS256",
-    # "SIGNING_KEY": SECRET_KEY,
+    "SIGNING_KEY": SECRET_KEY,
     "VERIFYING_KEY": "",
     "AUDIENCE": None,
     "ISSUER": None,
@@ -90,9 +88,6 @@ ASGI_APPLICATION = 'ft_transcendence.asgi.application'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-	
-	# 'corsheaders.middleware.CorsMiddleware',
-	
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',

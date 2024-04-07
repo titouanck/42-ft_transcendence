@@ -1,6 +1,12 @@
 from django.db.models import Q
-from django.core.exceptions import FieldError, ValidationError
+from django.contrib.auth.models import User
+from django.core.exceptions import FieldError, ValidationError, ObjectDoesNotExist
+from rest_framework.permissions import BasePermission
 import re
+
+class IsNotAuthenticated(BasePermission):
+    def has_permission(self, request, view):
+        return not request.user or not request.user.is_authenticated
 
 def filter(queryset, query_params):
 	for field_name, field_value in query_params.items():
@@ -34,22 +40,31 @@ def filter(queryset, query_params):
 				return []
 	return queryset
 
-# def formatMessageValidationError(e):
-# 	s = str(e).replace("'", '').replace('“', "").replace('”', "")
-# 	if len(s) <= 2:
-# 		return s
-# 	else:
-# 		return s[1:-1]
-
 def isEmailValid(email):
 	regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
 	if re.match(regex, email):
 		return True
 	return False
 
+def checkAvailability(field=None, field_data=None):
+	if field and field_data:
+		try:
+			if field == 'username':
+				User.objects.get(username=field_data)
+			elif field == 'email':
+				if isEmailValid(field_data):
+					User.objects.get(email=field_data)
+			else:
+				raise ObjectDoesNotExist()
+			return [f'This {field} is already taken.']
+		except (ValidationError, ValueError):
+			return [f'This {field} is either already taken or not available.']
+		except ObjectDoesNotExist:
+			pass
+		return []
+
 def identifyPasswordVulnerabilities(password):
 	vulenerabilities = []
 	if len(password) < 8:
 		vulenerabilities.append('This password is too short.') 
 	return vulenerabilities
-

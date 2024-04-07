@@ -5,10 +5,12 @@ from uuid import uuid4
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
+from .EmailVerification import EmailVerification
+
 import secrets
 import string
 
-from api import utils
+from app import utils
 
 from .choices import needed_length
 from .choices import PLAYER_STATUS, PLAYER_STATUS_DEFAULT
@@ -33,6 +35,14 @@ def validate_profile_picture(image):
 	except Exception as e:
 		raise e
 	
+class PlayerManager(models.Manager):
+	def create(self, user=None, email=None, **kwargs):
+		kwargs['user'] = user
+		response = super().create(**kwargs)
+		if user and email:
+			EmailVerification.objects.create(user=user, email=email)
+		return response
+	
 class Player(models.Model):
 	
 	uid = models.UUIDField(primary_key=True, default=uuid4, editable=False, unique=True)
@@ -56,6 +66,8 @@ class Player(models.Model):
 	created_at = models.DateTimeField(auto_now_add=True)
 
 	updated_at = models.DateTimeField(auto_now=True)
+
+	objects = PlayerManager()
 
 	# **************************************************************************** #
 
@@ -154,4 +166,3 @@ class Player(models.Model):
 	
 	def get_email(self):
 		return self.user.email if self.user else None
-

@@ -6,7 +6,7 @@ from django.utils import timezone
 import secrets
 import string
 
-from api import utils
+from app import utils
 
 from .choices import needed_length, STATUS, STATUS_DEFAULT, IN_PROGRESS, ABANDONED, COMPLETED
 from django.contrib.auth.models import User
@@ -34,7 +34,7 @@ class EmailVerification(models.Model):
 
 	created_at = models.DateTimeField(auto_now_add=True)
 	
-	expires_at = models.DateTimeField(default=generate_expiration_timestamp, editable=False)
+	expires_at = models.DateTimeField(default=generate_expiration_timestamp)
 
 	# **************************************************************************** #
 
