@@ -6,8 +6,6 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 
 from .views.getPlayers import getPlayers
-from .views.createPlayer import createPlayer
-from .views.deletePlayer import deletePlayer
 from .views.PlayerViewSet import PlayerViewSet
 from .views.confirmEmail import confirmEmail
 

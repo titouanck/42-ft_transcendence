@@ -1,5 +1,5 @@
 # Django
-django==4.2
+django==4.2.11
 
 # PostgreSQL adapter for Python
 psycopg[binary]==3.1.18
