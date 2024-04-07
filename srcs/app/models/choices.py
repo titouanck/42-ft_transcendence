@@ -57,7 +57,6 @@ PLAYER_STATUS = (
 # MATCH_STATUS *************************************************************** #
 
 PENDING = 'Pending'
-SCHEDULED = 'Scheduled'
 IN_PROGRESS = 'In progress'
 COMPLETED = 'Completed'
 ABANDONED = 'Abandoned'
@@ -65,7 +64,6 @@ ABANDONED = 'Abandoned'
 MATCH_STATUS_DEFAULT = PENDING
 MATCH_STATUS = (
 	(PENDING, PENDING),
-	(SCHEDULED, SCHEDULED),
 	(IN_PROGRESS, IN_PROGRESS),
 	(COMPLETED, COMPLETED),
 	(ABANDONED, ABANDONED),

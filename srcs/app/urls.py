@@ -19,6 +19,6 @@ from django.urls import path, include
 from . import views
 
 urlpatterns = [
-    path('', views.main_app),
-    path('websockets/', views.websockets),
+    # path('', views.main_app),
+    # path('websockets/', views.websockets),
 ]

@@ -32,7 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 	'rest_framework',
 	'rest_framework_simplejwt.token_blacklist',
-	'corsheaders',
+	# 'corsheaders',
 	'app',
 	'api',
 ]
@@ -46,8 +46,8 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
-    "ROTATE_REFRESH_TOKENS": True,
-    "BLACKLIST_AFTER_ROTATION": True,
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
     "UPDATE_LAST_LOGIN": False,
 
     "ALGORITHM": "HS256",
@@ -90,7 +90,7 @@ ASGI_APPLICATION = 'ft_transcendence.asgi.application'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
 	
-	'corsheaders.middleware.CorsMiddleware',
+	# 'corsheaders.middleware.CorsMiddleware',
 	
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -181,4 +181,4 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOW_ALL_ORIGINS: True
+CORS_ALLOW_ALL_ORIGINS: False
