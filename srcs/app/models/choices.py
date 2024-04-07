@@ -54,15 +54,15 @@ PLAYER_STATUS = (
 	(PLAYING, PLAYING)
 )
 
-# MATCH_STATUS *************************************************************** #
+# STATUS ********************************************************************* #
 
 PENDING = 'Pending'
 IN_PROGRESS = 'In progress'
 COMPLETED = 'Completed'
 ABANDONED = 'Abandoned'
 
-MATCH_STATUS_DEFAULT = PENDING
-MATCH_STATUS = (
+STATUS_DEFAULT = PENDING
+STATUS = (
 	(PENDING, PENDING),
 	(IN_PROGRESS, IN_PROGRESS),
 	(COMPLETED, COMPLETED),

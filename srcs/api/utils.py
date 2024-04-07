@@ -1,5 +1,6 @@
 from django.db.models import Q
 from django.core.exceptions import FieldError, ValidationError
+import re
 
 def filter(queryset, query_params):
 	for field_name, field_value in query_params.items():
@@ -39,3 +40,16 @@ def filter(queryset, query_params):
 # 		return s
 # 	else:
 # 		return s[1:-1]
+
+def isEmailValid(email):
+	regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+	if re.match(regex, email):
+		return True
+	return False
+
+def identifyPasswordVulnerabilities(password):
+	vulenerabilities = []
+	if len(password) < 8:
+		vulenerabilities.append('This password is too short.') 
+	return vulenerabilities
+

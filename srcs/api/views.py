@@ -1,21 +1,19 @@
+from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly
-from rest_framework.authentication import BasicAuthentication, SessionAuthentication
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
-
-import io
-from rest_framework.parsers import JSONParser
+from django.core.exceptions import ValidationError
+from .permissions import IsNotAuthenticated
 
 from . import utils
 from django.contrib.auth.models import User
+from app.models.choices import IN_PROGRESS, COMPLETED
 from app.models.Player import Player
+from app.models.EmailVerification import EmailVerification
 from app.serializers import PlayerSerializer
 
 class getRoutes(APIView):
-	authentication_classes = []
 	permission_classes = [AllowAny]
 
 	def get(self, request, format=None):
@@ -27,7 +25,6 @@ class getRoutes(APIView):
 		return Response(routes)
 
 class getPlayers(generics.ListAPIView):
-	authentication_classes = []
 	permission_classes = [AllowAny]
 	serializer_class = PlayerSerializer
 
@@ -52,12 +49,59 @@ class getPlayers(generics.ListAPIView):
 		context = super().get_serializer_context()
 		context.update({"scope": self.scope()})
 		return context
+	
+	def post(self, request, format=None):
+		errors = {}
+
+		username = request.data.get('username', None)
+		if username is None:
+			errors['username'] = ['This field is required.']
+		elif not username:
+			errors['username'] = ['This field may not be blank.']
+		try:
+			users = User.objects.get(username=username)
+			errors['username'] = ['This username is already taken.']
+		except Exception:
+			pass
+		
+		email = request.data.get('email', None)
+		if email is None:
+			errors['email'] = ['This field is required.']
+		elif not email:
+			errors['email'] = ['This field may not be blank.']
+		elif not utils.isEmailValid(email):
+			errors['email'] = ['This email is not valid.']
+		try:
+			users = User.objects.get(email=email)
+			errors['email'] = ['This email is already taken.']
+		except Exception:
+			pass
+		
+		password = request.data.get('password', None)
+		if password is None:
+			errors['password'] = ['This field is required.']
+		elif not password:
+			errors['password'] = ['This field may not be blank.']
+		else:
+			password_vulnerabilities = utils.identifyPasswordVulnerabilities(password)
+			if password_vulnerabilities:
+				errors['password'] = password_vulnerabilities
+		
+		if errors:
+			return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+		
+		try:
+			new_user = User.objects.create_user(username, email, password)
+			new_player = Player.objects.create(user=new_user)
+			serializer = PlayerSerializer(new_player, context={'scope' : 'private'})
+			return Response(serializer.data)
+		except Exception as e:
+			return Response({'detail' : str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 	def scope(self):
 		return self.request.query_params.get('scope', None)
 
 class getPlayer(APIView):
-	authentication_classes = []
 	permission_classes = [AllowAny]
 
 	def get(self, request, player, format=None):
@@ -72,11 +116,6 @@ class getPlayer(APIView):
 			serializer.save()
 			return Response(serializer.data)
 		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-	
-	def get_serializer_context(self):
-		context = super().get_serializer_context()
-		context.update({"scope": self.scope()})
-		return context
 
 	def scope(self):
 		return self.request.query_params.get('scope', None)
@@ -94,3 +133,42 @@ class getPlayer(APIView):
 				raise e
 		return player_object
 
+class verify(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request, format=None):
+		errors = {}
+
+		slug = request.data.get('slug', None)
+		if slug is None:
+			errors['slug'] = ['This field is required.']
+		elif not slug:
+			errors['slug'] = ['This field may not be blank.']
+		else:
+			try:
+				email_verification = EmailVerification.objects.get(verification_slug=slug)
+			except (EmailVerification.DoesNotExist, ValidationError, ValueError):
+				errors['slug'] = ['This slug is not valid.']
+
+		if errors:
+			return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+		
+		if not email_verification.is_valid():
+			return Response({"detail": "This link has expired."}, status=419)
+		if email_verification.user != request.user:
+			return Response({"detail": "This is not the good account."},  status=status.HTTP_403_FORBIDDEN)
+		
+		try:
+			User.objects.get(email=email_verification.email)
+			return Response({"detail" : "This email is already taken."}, status=status.HTTP_400_BAD_REQUEST)
+		except Exception as e:
+			pass
+		
+		player = Player.objects.get(user=request.user)
+		if not player.set_email(email_verification.email):
+			return Response({"detail" : "Could not save email."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+		email_verification.verification_status = COMPLETED
+		email_verification.save()
+		serializer = PlayerSerializer(player, context={'scope' : 'private'})
+		return Response(serializer.data)

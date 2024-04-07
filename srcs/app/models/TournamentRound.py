@@ -4,7 +4,7 @@ from .Tournament import Tournament
 
 class TournamentRound(models.Model):
 	uid = models.UUIDField(primary_key = True, default = uuid4, editable = False)
-	tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, null=True, related_name='tournamentround_tournament_uid')
+	tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, null=True, related_name='tournamentround_tournament')
 
 	round_number = models.IntegerField(default=0)
 	round_started_at = models.DateTimeField(blank=True, null=True)

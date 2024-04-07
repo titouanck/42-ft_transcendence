@@ -5,6 +5,10 @@ from uuid import uuid4
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
+import secrets
+import string
+
+from api import utils
 
 from .choices import needed_length
 from .choices import PLAYER_STATUS, PLAYER_STATUS_DEFAULT
@@ -28,12 +32,12 @@ def validate_profile_picture(image):
 			raise ValidationError('Image aspect ratio must be 1:1')
 	except Exception as e:
 		raise e
-
+	
 class Player(models.Model):
 	
 	uid = models.UUIDField(primary_key=True, default=uuid4, editable=False, unique=True)
 
-	user = models.OneToOneField(User, null=True, blank=True, unique=True, on_delete=models.CASCADE, related_name='player_user_id')
+	user = models.OneToOneField(User, null=True, blank=True, unique=True, on_delete=models.CASCADE, related_name='player_user')
 
 	profile_picture = models.ImageField(upload_to=rename_profile_picture, validators=[validate_profile_picture], null=True, blank=True)
 
@@ -57,9 +61,6 @@ class Player(models.Model):
 
 	def __str__(self):
 		return f'{self.user.username if self.user else self.uid}, {self.player_rank}'
-
-	def save(self, *args, **kwargs):
-		super().save(*args, **kwargs)
 	
 	def clean(self):
 		self.update_all()
@@ -102,13 +103,46 @@ class Player(models.Model):
 	def update_total_matches(self):
 		self.total_matches = self.total_victories + self.total_defeats
 
+	def update_user(self):
+		if not self.user:
+			username = ''.join(secrets.choice(string.ascii_lowercase) for i in range(8))
+			password = ''.join(secrets.choice(string.ascii_letters + string.digits + string.punctuation) for i in range(20))
+			email = ''
+			user = User.objects.create_user(username, email, password)
+			self.user = user
+
 	def update_all(self):
+		self.update_user()
 		self.update_profile_picture()
 		self.update_rank()
 		self.update_total_matches()
 
-# 	# **************************************************************************** #
+	# **************************************************************************** #
 
+	def set_username(self, username):
+		if self.user:
+			try:
+				self.user.username = username
+				self.user.save()
+				return True
+			except Exception as e:
+				pass
+		return False
+	
+	def set_email(self, email):
+		if self.user:
+			try:
+				if not utils.isEmailValid(email):
+					raise ValueError('This email is not valid.')
+				self.user.email = email
+				self.user.save()
+				return True
+			except Exception as e:
+				pass
+		return False
+
+	# **************************************************************************** #
+	
 	def get_profile_picture_url(self, request):
 		if self.profile_picture:
 			return f'{request.scheme}://{request.get_host()}/api/users/{self.uid}/profile_picture/'
@@ -117,4 +151,7 @@ class Player(models.Model):
 		
 	def get_username(self):
 		return self.user.username if self.user else None
+	
+	def get_email(self):
+		return self.user.email if self.user else None
 

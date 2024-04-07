@@ -8,7 +8,7 @@ class Tournament(models.Model):
 	elo_min = models.IntegerField(default=None, null=True, blank=True)
 	elo_max = models.IntegerField(default=None, null=True, blank=True)
 
-	tournament_winner = models.ForeignKey(Player, on_delete=models.SET_NULL, blank=True, null=True, related_name='tournament_tournament_winner_uid')
+	tournament_winner = models.ForeignKey(Player, on_delete=models.SET_NULL, blank=True, null=True, related_name='tournament_tournament_winner')
 	tournament_started_at = models.DateTimeField(blank=True, null=True)
 	tournament_ended_at = models.DateTimeField(blank=True, null=True)
 
