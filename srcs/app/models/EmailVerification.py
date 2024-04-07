@@ -76,7 +76,7 @@ class EmailVerification(models.Model):
 						],
 						"Subject": "Confirm your email.",
 						"TextPart": "Confirmation email",
-						"HTMLPart": f"<span>Dear <strong>{self.user.username}</strong>, please <a href='http://127.0.0.1:8000/api/verify/{self.verification_slug}'>confirm your email</a>.</span>",
+						"HTMLPart": f"<span>Dear <strong>{self.user.username}</strong>, please <a href='http://127.0.0.1:8000/api/confirm-email/{self.verification_slug}/'>confirm your email</a>.</span>",
 						"CustomID": "AppGettingStartedTest"
 					}
 				]

@@ -8,30 +8,32 @@ from app.serializers import PlayerSerializer
 
 from app import utils
 
+def getPlayersQueryset(query_params, user, scope):
+	queryset = Player.objects.all()
+
+	if 'username' in query_params:
+		query_params['user__username'] = query_params['username']
+		query_params.pop('username')
+
+	if 'email' in query_params:
+		if scope == 'private' and user.is_staff:
+			query_params['user__email'] = query_params['email']
+		query_params.pop('email')
+
+	queryset = utils.filter(queryset, query_params)
+	return queryset
+
 class getPlayers(generics.ListAPIView):
 	permission_classes = [AllowAny]
+	
 	serializer_class = PlayerSerializer
 
 	def get_queryset(self):
-		queryset = Player.objects.all()
-
-		query_params = self.request.query_params.copy()
-		
-		if 'username' in query_params:
-			query_params['user__username'] = query_params['username']
-			query_params.pop('username')
-
-		if 'email' in query_params:
-			if self.scope() == 'private':
-				query_params['user__email'] = query_params['email']
-			query_params.pop('email')
-
-		queryset = utils.filter(queryset, query_params)
-		return queryset
+		return getPlayersQueryset(self.request.query_params.copy(), self.request.user, self.scope())
 	
 	def get_serializer_context(self):
 		context = super().get_serializer_context()
-		context.update({"scope": self.scope()})
+		context.update({"scope": self.scope(), 'user' : self.request.user})
 		return context
 
 	def scope(self):

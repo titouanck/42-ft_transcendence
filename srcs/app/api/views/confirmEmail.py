@@ -13,27 +13,18 @@ from app.serializers import PlayerSerializer
 class confirmEmail(APIView):
 	permission_classes = [IsAuthenticated]
 
-	def post(self, request, format=None):
+	def post(self, request, verification_slug, format=None):
 		errors = {}
 
-		slug = request.data.get('slug', None)
-		if slug is None:
-			errors['slug'] = ['This field is required.']
-		elif not slug:
-			errors['slug'] = ['This field may not be blank.']
-		else:
-			try:
-				email_verification = EmailVerification.objects.get(verification_slug=slug)
-			except (EmailVerification.DoesNotExist, ValidationError, ValueError):
-				errors['slug'] = ['This slug is not valid.']
+		try:
+			email_verification = EmailVerification.objects.get(verification_slug=verification_slug)
+			if not email_verification.is_valid():
+				raise ValidationError()
+		except (EmailVerification.DoesNotExist, ValidationError, ValueError):
+			return Response({"detail": "This email verification link has expired."}, status=419)
 
-		if errors:
-			return Response(errors, status=status.HTTP_400_BAD_REQUEST)
-		
-		if not email_verification.is_valid():
-			return Response({"detail": "This link has expired."}, status=419)
 		if email_verification.user != request.user:
-			return Response({"detail": "You are connected from."},  status=status.HTTP_403_FORBIDDEN)
+			return Response({"detail": "You are connected from a different account."},  status=status.HTTP_403_FORBIDDEN)
 		
 		try:
 			User.objects.get(email=email_verification.email)

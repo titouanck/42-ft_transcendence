@@ -35,6 +35,13 @@ def validate_profile_picture(image):
 	except Exception as e:
 		raise e
 	
+def validate_username(value):
+    forbidden_names = ['me', 'new', 'create', 'read', 'update', 'delete']
+    if value.lower() in forbidden_names:
+        raise ValidationError(f"Username cannot be part of {forbidden_names}")
+	
+User._meta.get_field('username').validators.append(validate_username)
+	
 class PlayerManager(models.Manager):
 	def create(self, user=None, email=None, **kwargs):
 		kwargs['user'] = user
