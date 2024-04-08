@@ -17,11 +17,11 @@ class confirmEmail(APIView):
 		errors = {}
 
 		try:
-			email_verification = EmailVerification.objects.get(verification_slug=verification_slug)
+			email_verification = EmailVerification.objects.get(verification_link=verification_slug)
 			if not email_verification.is_valid():
-				raise ValidationError()
+				raise ValidationError(None)
 		except (EmailVerification.DoesNotExist, ValidationError, ValueError):
-			return Response({"detail": "This email verification link has expired."}, status=419)
+			return Response({"detail": "This email verification link has expired."}, status=status.HTTP_410_GONE)
 
 		if email_verification.user != request.user:
 			return Response({"detail": "You are connected from a different account."},  status=status.HTTP_403_FORBIDDEN)

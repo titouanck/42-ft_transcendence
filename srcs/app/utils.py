@@ -1,12 +1,16 @@
+from django.conf import settings
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.core.exceptions import FieldError, ValidationError, ObjectDoesNotExist
 from rest_framework.permissions import BasePermission, SAFE_METHODS
+import os
 import re
+import secrets
+import string
 
 class IsNotAuthenticated(BasePermission):
-    def has_permission(self, request, view):
-        return not request.user or not request.user.is_authenticated
+	def has_permission(self, request, view):
+		return not request.user or not request.user.is_authenticated
 	
 class IsNotAuthenticatedOrReadOnly(BasePermission):
 	def has_permission(self, request, view):
@@ -77,3 +81,26 @@ def identifyPasswordVulnerabilities(password):
 	if len(password) < 8:
 		vulenerabilities.append('This password is too short.') 
 	return vulenerabilities
+
+def readStaticFile(file_path):
+	static_path = settings.STATICFILES_DIRS[0]
+	full_path = os.path.join(static_path, file_path)
+	content = None
+	with open(full_path, 'r') as file:
+		content = file.read()
+	return content
+
+
+def replaceVars(string, dictionary):
+    def replace_variable(match):
+        variable = match.group(1)
+        return dictionary.get(variable, match.group(0))
+
+    import re
+    pattern = r'\${([^}]*)}'
+    new_string = re.sub(pattern, replace_variable, string)
+    return new_string
+
+def randomSlug(number):
+	slug = ''.join(secrets.choice(string.ascii_letters + string.digits) for i in range(number))
+	return slug

@@ -16,10 +16,10 @@ class Migration(migrations.Migration):
             name='ConfirmationEmail',
             fields=[
                 ('uid', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False, unique=True)),
-                ('slug', models.SlugField(default=app.models.EmailVerification.generate_slug)),
+                ('slug', models.SlugField()),
                 ('status', models.CharField(choices=[('Pending', 'Pending'), ('In progress', 'In progress'), ('Completed', 'Completed'), ('Abandoned', 'Abandoned')], default='Pending', max_length=30)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('expires_at', models.DateTimeField(default=app.models.EmailVerification.generate_expiration_timestamp, editable=False)),
+                ('expires_at', models.DateTimeField(editable=False)),
             ],
         ),
         migrations.DeleteModel(

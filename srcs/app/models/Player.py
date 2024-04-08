@@ -18,11 +18,24 @@ from .choices import PLAYER_RANKS, PLAYER_RANKS_DEFAULT
 
 # **************************************************************************** #
 
+class PlayerManager(models.Manager):
+	def create(self, user=None, email=None, **kwargs):
+		kwargs['user'] = user
+		response = super().create(**kwargs)
+		if user and email:
+			try:
+				instance = EmailVerification.objects.create(user=user, email=email)
+				if not instance.send():
+					raise Exception('Could not send an email to the given address')
+			except Exception as e:
+				raise e
+		return response
+
 def rename_profile_picture(instance, filename):
-		upload_to = 'user_data/profile_picture/'
-		extension = filename.split('.')[-1]
-		filename = '{}.{}'.format(instance.uid, extension)
-		return os.path.join(upload_to, filename)
+	upload_to = 'user_data/profile_picture/'
+	extension = filename.split('.')[-1]
+	filename = '{}.{}'.format(instance.uid, extension)
+	return os.path.join(upload_to, filename)
 
 def validate_profile_picture(image):
 	try:
@@ -41,14 +54,6 @@ def validate_username(value):
         raise ValidationError(f"Username cannot be part of {forbidden_names}")
 	
 User._meta.get_field('username').validators.append(validate_username)
-	
-class PlayerManager(models.Manager):
-	def create(self, user=None, email=None, **kwargs):
-		kwargs['user'] = user
-		response = super().create(**kwargs)
-		if user and email:
-			EmailVerification.objects.create(user=user, email=email)
-		return response
 	
 class Player(models.Model):
 	

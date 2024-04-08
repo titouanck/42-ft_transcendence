@@ -19,11 +19,11 @@ class Migration(migrations.Migration):
             name='EmailVerification',
             fields=[
                 ('uid', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False, unique=True)),
-                ('verification_slug', models.SlugField(default=app.models.EmailVerification.generate_slug)),
+                ('verification_slug', models.SlugField()),
                 ('verification_status', models.CharField(choices=[('Pending', 'Pending'), ('In progress', 'In progress'), ('Completed', 'Completed'), ('Abandoned', 'Abandoned')], default='Pending', max_length=30)),
                 ('email_sended', models.BooleanField(default=False)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('expires_at', models.DateTimeField(default=app.models.EmailVerification.generate_expiration_timestamp, editable=False)),
+                ('expires_at', models.DateTimeField(editable=False)),
                 ('user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='EmailVerification_user', to=settings.AUTH_USER_MODEL)),
             ],
         ),

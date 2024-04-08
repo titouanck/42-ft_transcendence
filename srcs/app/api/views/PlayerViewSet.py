@@ -32,12 +32,18 @@ class PlayerViewSet(ViewSet):
 		if errors:
 			return Response(errors, status=status.HTTP_400_BAD_REQUEST)
 		
+		new_user = new_player = None
 		try:
 			new_user = User.objects.create_user(request.data['username'], '', request.data['password'])
 			new_player = Player.objects.create(user=new_user, email=request.data['email'])
 			serializer = PlayerSerializer(new_player, context={'scope' : 'private'})
 			return Response(serializer.data)
 		except Exception as e:
+			try:
+				new_user.delete()
+				new_player.delete()
+			except Exception:
+				pass
 			return Response({'detail' : str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 	def read(self, request, player, format=None):
@@ -68,29 +74,30 @@ class PlayerViewSet(ViewSet):
 			player_object = self.retrieve_player(player)
 		except Exception as e:
 			return Response({'detail' : str(e)}, status=status.HTTP_404_NOT_FOUND)
-		
+
 		response = {}
 		serializer = PlayerSerializer(player_object, context={'scope' : self.scope(), 'user' : request.user})
+		data = serializer.data
 		field_name = 'confirm_destructive_action'
 		required_field = request.data.get(field_name, None)
 		if required_field is None:
 			response[field_name] = ['This field is required.', 'Bool value expected']
-			response['result'] = serializer.data
+			response['result'] = data
 			return Response(response, status.HTTP_400_BAD_REQUEST)
 		elif required_field is False:
 			response[field_name] = ['Aborted.']
-			response['result'] = serializer.data
+			response['result'] = data
 			return Response(response, status.HTTP_406_NOT_ACCEPTABLE)
 		else:
 			user = player_object.user
 			if user:
 				user.delete()
 			player_object.delete()
-		return Response(serializer.data)
+		return Response(data)
 
 	def scope(self):
 		return self.request.query_params.get('scope', None)
-	
+
 	def retrieve_player(self, player):
 		try:
 			player_object = Player.objects.get(pk=player)

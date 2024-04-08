@@ -3,87 +3,123 @@ import mailjet_rest
 from django.db import models
 from uuid import uuid4
 from django.utils import timezone
-import secrets
-import string
 
 from app import utils
-
-from .choices import needed_length, STATUS, STATUS_DEFAULT, IN_PROGRESS, ABANDONED, COMPLETED
+import secrets
+import string
+from .choices import needed_length, STATUS, STATUS_DEFAULT, PENDING, IN_PROGRESS, ABANDONED, COMPLETED
 from django.contrib.auth.models import User
 
+MAILJET_API_KEY = os.environ['MAILJET_API_KEY']
+MAILJET_API_SECRET = os.environ['MAILJET_API_SECRET']
+LINK_LIFETIME = timezone.timedelta(hours=1)
+
 # **************************************************************************** #
-
-def generate_slug():
-	slug = ''.join(secrets.choice(string.ascii_letters + string.digits) for i in range(42))
-	return slug
-
-def generate_expiration_timestamp():
-	return timezone.now() + timezone.timedelta(hours=1)
 
 class EmailVerification(models.Model):
 	
 	uid = models.UUIDField(primary_key=True, default=uuid4, editable=False, unique=True)
 
-	user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True, related_name='emailverification_user')
+	user = models.OneToOneField(User, null=True, blank=True, unique=True, on_delete=models.CASCADE)
 
 	email = models.EmailField(null=True, validators=[utils.isEmailValid])
 
 	verification_status = models.CharField(max_length=needed_length(STATUS), choices=STATUS, default=STATUS_DEFAULT)
 
-	verification_slug = models.SlugField(default=generate_slug)
+	verification_link = models.SlugField(null=True, blank=True, unique=True)
 
-	created_at = models.DateTimeField(auto_now_add=True)
-	
-	expires_at = models.DateTimeField(default=generate_expiration_timestamp)
+	sended_at = models.DateTimeField(null=True, blank=True)
 
 	# **************************************************************************** #
 
 	def __str__(self):
 		return f'{self.user.username if self.user else self.uid}'
 	
-	def save(self, *args, **kwargs):
-		if self.verification_status != COMPLETED:
-			if timezone.now() >= self.expires_at:
+	def clean(self):
+		self.update_all()
+		super().clean()
+
+	# **************************************************************************** #
+
+	def update_verification_status(self):
+		if not self.sended_at:
+			self.verification_status = STATUS_DEFAULT
+		elif self.verification_status == PENDING:
+			self.verification_status = IN_PROGRESS
+		if self.verification_status == IN_PROGRESS:
+			if timezone.now() >= self.sended_at + LINK_LIFETIME:
 				self.verification_status = ABANDONED
-			elif self.verification_status == STATUS_DEFAULT:
-				self.send()
-		super().save(*args, **kwargs)
+
+	def update_all(self):
+		self.update_verification_status()
+
+	# **************************************************************************** #
+
+	def get_verification_status(self):
+		self.update_verification_status()
+		return self.verification_status
+
+	# **************************************************************************** #
 
 	def is_valid(self):
-		if self.verification_status != COMPLETED and timezone.now() >= self.expires_at:
-			self.verification_status = ABANDONED
-		return True if self.verification_status == IN_PROGRESS else False
-	
-	# **************************************************************************** #
-	
-	def send(self):
-		if self.verification_status == STATUS_DEFAULT and self.user:
-			api_key = os.environ['MAILJET_ID']
-			api_secret = os.environ['MAILJET_SECRET']
-			mailjet = mailjet_rest.Client(auth=(api_key, api_secret), version='v3.1')
-			data = {
-				'Messages': [
-					{
-						"From": {
-							"Email": "ft_transcendence@titouanck.fr",
-							"Name": "ft_transcendence"
-						},
-						"To": [
-							{
-							"Email": f"{self.email}",
-							"Name": f"{self.user.username}"
-							}
-						],
-						"Subject": "Confirm your email.",
-						"TextPart": "Confirmation email",
-						"HTMLPart": f"<span>Dear <strong>{self.user.username}</strong>, please <a href='http://127.0.0.1:8000/api/confirm-email/{self.verification_slug}/'>confirm your email</a>.</span>",
-						"CustomID": "AppGettingStartedTest"
-					}
-				]
-			}
-			result = mailjet.send.create(data=data)
-			if result.status_code == 200:
-				self.verification_status = IN_PROGRESS
-				return True
+		self.update_verification_status()
+		print(self.verification_status)
+		if self.verification_status == IN_PROGRESS:
+			return True
 		return False
 
+	# **************************************************************************** #
+	
+	def send(self, resend=False):
+		if self.verification_status != STATUS_DEFAULT or not self.user:
+			return False
+		if not self.verification_link or not resend:
+			self.verification_link = utils.randomSlug(42)
+		
+		parameters = {
+			'sender_name' : 'ft_transcendence',
+			'sender_email' : 'ft_transcendence@titouanck.fr',
+			
+			'recipient_name' : self.user.username,
+			'recipient_email' : self.email,
+			
+			'email_subject' : "Confirm your email.",
+			'email_text' : "Confirmation email",
+
+			'verification_link' : f'http://127.0.0.1:8000/api/confirm-email/{self.verification_link}/'
+		}
+
+		html_content = utils.readStaticFile('html/verification_email.html')
+		if not html_content:
+			return False
+		html_content = utils.replaceVars(html_content, parameters)
+		
+
+		mailjet = mailjet_rest.Client(auth=(MAILJET_API_KEY, MAILJET_API_SECRET), version='v3.1')
+		data = {
+			'Messages': [
+				{
+					"From": {
+						"Email": parameters['sender_email'],
+						"Name": parameters['sender_name']
+					},
+					"To": [
+						{
+							"Email": parameters['recipient_email'],
+							"Name": parameters['recipient_name']
+						}
+					],
+					"Subject": parameters['email_subject'],
+					"TextPart": parameters['email_text'],
+					"HTMLPart": html_content
+				}
+			]
+		}
+		result = mailjet.send.create(data=data)
+		if result and result.status_code == 200:
+			self.sended_at = timezone.now()
+			self.update_all()
+			self.save()
+			return True
+		else:
+			return False

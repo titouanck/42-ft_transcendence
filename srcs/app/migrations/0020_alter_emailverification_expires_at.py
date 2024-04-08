@@ -11,9 +11,9 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
-            model_name='emailverification',
-            name='expires_at',
-            field=models.DateTimeField(default=app.models.EmailVerification.generate_expiration_timestamp),
-        ),
+        # migrations.AlterField(
+        #     model_name='emailverification',
+        #     name='expires_at',
+        #     field=models.DateTimeField(),
+        # ),
     ]
