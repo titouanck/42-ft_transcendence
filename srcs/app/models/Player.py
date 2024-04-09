@@ -49,7 +49,7 @@ def validate_profile_picture(image):
 			raise ValidationError('Image aspect ratio must be 1:1')
 	except Exception as e:
 		raise e
-	
+
 def validate_username(value):
     forbidden_names = ['me', 'new', 'create', 'read', 'update', 'delete']
     if value.lower() in forbidden_names:
