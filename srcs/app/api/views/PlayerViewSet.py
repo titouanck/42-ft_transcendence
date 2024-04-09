@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from app import utils
 
@@ -11,9 +11,10 @@ from app.models.Player import Player
 from app.serializers import PlayerSerializer
 
 class PlayerViewSet(ViewSet):
-	permission_classes = [AllowAny]
-
 	def create(self, request, player=None, format=None):
+		if request.user.is_authenticated and not request.user.is_staff:
+			return Response({"detail": "Impossible to create an account when already logged in."},  status=status.HTTP_403_FORBIDDEN)
+
 		errors = {}
 
 		required_fields = ['username', 'email', 'password']
@@ -36,7 +37,7 @@ class PlayerViewSet(ViewSet):
 		try:
 			new_user = User.objects.create_user(request.data['username'], '', request.data['password'])
 			new_player = Player.objects.create(user=new_user, email=request.data['email'])
-			serializer = PlayerSerializer(new_player, context={'scope' : 'private'})
+			serializer = PlayerSerializer(new_player, context={'scope' : self.scope()})
 			return Response(serializer.data)
 		except Exception as e:
 			try:
@@ -60,18 +61,23 @@ class PlayerViewSet(ViewSet):
 	def update(self, request, player, format=None):
 		try:
 			player_object = self.retrieve_player(player)
+			if player_object.user != request.user and not request.user.is_staff:
+				return Response({"detail": "Not enough permissions."},  status=status.HTTP_403_FORBIDDEN)
 		except Exception as e:
 			return Response({'detail' : str(e)}, status=status.HTTP_404_NOT_FOUND)
 
 		serializer = PlayerSerializer(player_object, data=request.data, partial=True, context={'scope' : self.scope(), 'user' : request.user})
-		if serializer.is_valid():
-			serializer.save()
-			return Response(serializer.data)
-		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-	
+		if not serializer.is_valid(is_staff=request.user.is_staff):
+			return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+		serializer.save()
+		player_object.clean()
+		return Response(serializer.data)
+
 	def delete(self, request, player, format=None):
 		try:
 			player_object = self.retrieve_player(player)
+			if player_object.user != request.user and not request.user.is_staff:
+				return Response({"detail": "Not enough permissions."},  status=status.HTTP_403_FORBIDDEN)
 		except Exception as e:
 			return Response({'detail' : str(e)}, status=status.HTTP_404_NOT_FOUND)
 
@@ -87,7 +93,7 @@ class PlayerViewSet(ViewSet):
 		elif required_field is False:
 			response[field_name] = ['Aborted.']
 			response['result'] = data
-			return Response(response, status.HTTP_406_NOT_ACCEPTABLE)
+			return Response(response, status.HTTP_400_BAD_REQUEST)
 		else:
 			user = player_object.user
 			if user:
@@ -109,5 +115,13 @@ class PlayerViewSet(ViewSet):
 				raise e
 		except Exception as e:
 			raise e
-
 		return player_object
+		
+	def get_permissions(self):
+		print(f'self.action: {self.action}')
+		if self.action in ['read', 'update', 'delete']:
+			permission_classes = [IsAuthenticatedOrReadOnly]
+		else:
+			permission_classes = [AllowAny]
+		return [permission() for permission in permission_classes]
+

@@ -4,6 +4,7 @@ from rest_framework.permissions import AllowAny
 
 from django.contrib.auth.models import User
 from app.models.Player import Player
+from app.models.EmailVerification import EmailVerification
 from app.serializers import PlayerSerializer
 
 from app import utils
@@ -20,7 +21,6 @@ def getPlayersQueryset(query_params, user, scope):
 			query_params['user__email'] = query_params['email']
 		query_params.pop('email')
 
-	queryset = utils.filter(queryset, query_params)
 	return queryset
 
 class getPlayers(generics.ListAPIView):

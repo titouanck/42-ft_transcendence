@@ -39,6 +39,12 @@ class EmailVerification(models.Model):
 		self.update_all()
 		super().clean()
 
+	def reset(self):
+		fields = self._meta.fields
+		for field in fields:
+			if field.name not in ['uid', 'user']:
+				setattr(self, field.name, field.get_default())
+
 	# **************************************************************************** #
 
 	def update_verification_status(self):
@@ -70,6 +76,11 @@ class EmailVerification(models.Model):
 
 	# **************************************************************************** #
 	
+	def change_email(self, new_email):
+		self.reset()
+		self.email = new_email
+		self.send()
+
 	def send(self, resend=False):
 		if self.verification_status != STATUS_DEFAULT or not self.user:
 			return False
@@ -122,4 +133,6 @@ class EmailVerification(models.Model):
 			self.save()
 			return True
 		else:
+			self.verification_status = ABANDONED
+			self.save()
 			return False
