@@ -37,7 +37,7 @@ class PlayerViewSet(ViewSet):
 		try:
 			new_user = User.objects.create_user(request.data['username'], '', request.data['password'])
 			new_player = Player.objects.create(user=new_user, email=request.data['email'])
-			serializer = PlayerSerializer(new_player, context={'scope' : self.scope()})
+			serializer = PlayerSerializer(new_player, context={'scope' : 'private'})
 			return Response(serializer.data)
 		except Exception as e:
 			try:
@@ -57,7 +57,7 @@ class PlayerViewSet(ViewSet):
 			return Response({'detail' : 'Ressource not found.'}, status=status.HTTP_404_NOT_FOUND)
 		serializer = PlayerSerializer(player_object, context={'scope' : self.scope(), 'user' : request.user})
 		return Response(serializer.data)
-	
+
 	def update(self, request, player, format=None):
 		try:
 			player_object = self.retrieve_player(player)
@@ -66,7 +66,7 @@ class PlayerViewSet(ViewSet):
 		except Exception as e:
 			return Response({'detail' : str(e)}, status=status.HTTP_404_NOT_FOUND)
 
-		serializer = PlayerSerializer(player_object, data=request.data, partial=True, context={'scope' : self.scope(), 'user' : request.user})
+		serializer = PlayerSerializer(player_object, data=request.data, partial=True, context={'scope' : 'private', 'user' : request.user})
 		if not serializer.is_valid(is_staff=request.user.is_staff):
 			return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 		serializer.save()
@@ -82,7 +82,7 @@ class PlayerViewSet(ViewSet):
 			return Response({'detail' : str(e)}, status=status.HTTP_404_NOT_FOUND)
 
 		response = {}
-		serializer = PlayerSerializer(player_object, context={'scope' : self.scope(), 'user' : request.user})
+		serializer = PlayerSerializer(player_object, context={'scope' : 'private', 'user' : request.user})
 		data = serializer.data
 		field_name = 'confirm_destructive_action'
 		required_field = request.data.get(field_name, None)

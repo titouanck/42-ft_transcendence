@@ -18,6 +18,8 @@ from .choices import PLAYER_RANKS, PLAYER_RANKS_DEFAULT
 
 # **************************************************************************** #
 
+from django.contrib.auth.models import User
+
 class PlayerManager(models.Manager):
 	def create(self, user=None, email=None, **kwargs):
 		kwargs['user'] = user
