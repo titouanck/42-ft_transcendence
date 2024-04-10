@@ -19,45 +19,56 @@ class PlayerSerializer(serializers.ModelSerializer):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		many = True if isinstance(self.instance, QuerySet) else False
-		if self.scope() == 'public' or (
-			self.requester() and (
-				(not self.requester() or not self.requester().is_staff
-	 		) 
-			and (
-				many == True or self.requester() != self.instance.user)
-			)
-		):
-			self.fields.pop('email', None)
-			self.fields.pop('email_to_confirm', None)
-		self.fields.pop('password', None)
+
+		# for field in self.fields:
+		# 	if field in self.Meta.non_readable_fields:
+		# 		self.fields.pop(field, None)
+
+		# if self.scope() == 'public' or (
+		# 	self.requester() and (
+		# 		(not self.requester() or not self.requester().is_staff
+	 	# 	) 
+		# 	and (
+		# 		many == True or self.requester() != self.instance.user)
+		# 	)
+		# ):
+		# 	for field in self.fields:
+		# 		if field in self.Meta.private_fields:
+		# 			self.fields.pop(field, None)
 
 	# **************************************************************************** #
  
-	username = serializers.SerializerMethodField()
-	email = serializers.SerializerMethodField()
+	username = serializers.CharField(source='user.username', required=False)
+	email = serializers.EmailField(source="user.email", required=False)
 	email_to_confirm = serializers.SerializerMethodField()
-	password = serializers.SerializerMethodField()
-		
+	password = serializers.CharField(required=False, write_only=True)
+	
 	class Meta:
 		model = Player
 		fields = ['uid', 'username', 'email', 'email_to_confirm', 'player_rank', 'player_elo', 'total_victories', 'total_defeats', 'total_matches', 'password']
-		staff_only_fields = ['email', 'player_elo', 'total_victories', 'total_defeats']
-		read_only_fields = ['uid', 'player_rank', 'total_matches', 'password']
-		nullable_fields = ['email', 'email_to_confirm', 'player_elo']
+
+		editable_fields = ['username', 'email_to_confirm', 'password']
+		required_for_creation = ['username', 'email_to_confirm', 'password']
+		user_unique_fields = ['username', 'email_to_confirm']
+		non_nullable_fields =['username', 'password']
 
 	# **************************************************************************** #
  
-	def get_username(self, obj):
-		try:
-			return obj.user.username if obj.user.username else None
-		except Exception as e:
-			return None
-		
-	def get_email(self, obj):
-		try:
-			return obj.user.email if obj.user.email else None
-		except Exception as e:
-			return None
+	def to_representation(self, instance):
+		data = super().to_representation(instance)
+		for key, value in data.items():
+			if value == '':
+				data[key] = None
+		return data
+
+	# **************************************************************************** #
+ 
+	def get_fields(self):
+		fields = super().get_fields()
+		if self.instance is None:
+			for field in self.Meta.required_for_creation:
+				fields[field].required = True
+		return fields
 
 	def get_email_to_confirm(self, obj):
 		try:
@@ -66,9 +77,6 @@ class PlayerSerializer(serializers.ModelSerializer):
 			return email_verification.email
 		except Exception as e:
 			return None
-		
-	def get_password(self, obj):
-		return None
 
 	# **************************************************************************** #
 
@@ -78,41 +86,36 @@ class PlayerSerializer(serializers.ModelSerializer):
 		for key, value in self.initial_data.items():
 			if key not in self.Meta.fields:
 				self.add_error(key, 'This field do not exist.')
-			elif key in self.Meta.read_only_fields:
-				if key != 'password' or updating:
-					self.add_error(key, 'This field may not be updated.')
-			elif key in self.Meta.staff_only_fields and not is_staff:
-				self.add_error(key, 'This field can only be modified by a staff member.')
-			elif value is None and key not in self.Meta.nullable_fields:
-				self.add_error(key, 'This field may not be null.')
-
-			elif key in ['username', 'email', 'email_to_confirm'] and value:
-				if not updating:
-					instance_user = None
-				else:
-					instance_user = self.instance.user
-				original_key = key
-				if key == 'email_to_confirm':
-					key = 'email'
-				filtered_users = User.objects.all().filter(**{key: value})
+			
+			elif key not in self.Meta.editable_fields:
+				self.add_error(key, 'This field may not be modified.')
+			
+			elif key in self.Meta.user_unique_fields and value:
+				modified_key = key if key != 'email_to_confirm' else 'email'
+				filtered_users = User.objects.all().filter(**{modified_key: value})
 				for filtered_user in filtered_users:
-					if filtered_user != instance_user:
-						self.add_error(original_key, f'This {key} is already taken.')
-				field = User._meta.get_field(key)
-	
+					if not self.instance or self.instance.user != filtered_user:
+						self.add_error(key, f'This {key} is already in use.')
+				
+				field = User._meta.get_field(modified_key)	
 				try:
 					field.run_validators(value)
 				except ValidationError as e:
 					for error_message in e.messages:
-						self.add_error(original_key, error_message)
+						self.add_error(key, error_message)
 
-				if instance_user and key == 'email_to_confirm' and instance_user.email == value:
-					self.add_error(original_key, "This email has already been confirmed.")
+				if self.instance and modified_key == 'email_to_confirm' and self.instance.user.email == value:
+					self.add_error(key, "This email has already been confirmed.")
+			if key in self.Meta.non_nullable_fields or (not self.instance and key in self.Meta.required_for_creation):
+				if value is None:
+					self.add_error(key, 'This field may not be null.')
+				elif not value:
+					self.add_error(key, 'This field may not be blank.')
 
 		if self.errors or self._errors:
 			return False
 		return True
-
+	
 	# **************************************************************************** #
 
 	def update(self, instance, validated_data):

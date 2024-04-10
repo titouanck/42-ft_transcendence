@@ -12,8 +12,10 @@ from app.serializers import PlayerSerializer
 
 class PlayerViewSet(ViewSet):
 	def create(self, request, player=None, format=None):
-		serializer = PlayerSerializer(user, data=self.request.data)
-		return serializer.data
+		serializer = PlayerSerializer(data=self.request.data)
+		print(f'validity: {serializer.is_valid()}')
+		print(f'errors: {serializer.errors}')
+		return Response(serializer.errors)
 		print(serializer.is_valid(is_staff=request.user.is_staff))
 		print(serializer.errors)
 		serializer.save()
