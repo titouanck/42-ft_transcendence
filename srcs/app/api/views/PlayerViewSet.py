@@ -8,10 +8,25 @@ from app import utils
 
 from django.contrib.auth.models import User
 from app.models.Player import Player
-from app.serializers import PlayerSerializer
+from app.serializers.PlayerSerializer import PlayerSerializer
+from app.serializers.UserSerializer import UserSerializer
 
 class PlayerViewSet(ViewSet):
-	def create(self, request, player=None, format=None):
+	def create(self, request, format=None):
+		user = User.objects.get(username='ticolas')
+		serializer = PlayerSerializer(None, data=request.data)
+		
+		if serializer.is_valid():
+			serializer.save()
+			return Response(serializer.data)
+		return Response(serializer.errors)
+		obj = {
+			'is_valid' : serializer.is_valid(),
+			'errors' : serializer.errors,
+			'response' : serializer.save()}
+
+		return Response(serializer.data)
+		return Response({})
 		serializer = PlayerSerializer(data=self.request.data)
 		print(f'validity: {serializer.is_valid()}')
 		print(f'errors: {serializer.errors}')

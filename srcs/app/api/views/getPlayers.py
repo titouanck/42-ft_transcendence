@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny
 from django.contrib.auth.models import User
 from app.models.Player import Player
 from app.models.EmailVerification import EmailVerification
-from app.serializers import PlayerSerializer
+from app.serializers.PlayerSerializer import PlayerSerializer
 
 from app import utils
 
