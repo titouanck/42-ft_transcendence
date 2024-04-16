@@ -34,33 +34,31 @@ class UserSerializer(MyModelSerializer):
 		super().is_valid(raise_exception=raise_exception)
 		self.validate_fields()
 
-		# self.validate_password()
-
 		if self.errors and raise_exception:
 			raise ValidationError(self.errors)
 		return not self.errors
 	
 	def validate_password(self, data):
-		print(data)
 		password = self.initial_data.get('password', None)
 		if password:
 			try:
 				django_validate_password(password)
 			except ValidationError as e:
-				print(e.mess)
-				self.add_errors('password', e.messages)
+				raise e
 
 	# **************************************************************************** #
 
-	def update_password(self, instance, validated_data):
+	def update_password(self, instance, new_password):
+		print('THIS IS CALLED')
+
 		if 'password' in validated_data:
 			instance.set_password(validated_data['password'])
 			instance.save()
 		return instance
 
-	def update(self, instance, validated_data):
-		instance = super().update(instance, validated_data)
-		if 'password' in validated_data:
-			instance.set_password(validated_data['password'])
-		instance = self.update_password(instance, validated_data)
-		return instance
+	# def update(self, instance, validated_data):
+	# 	instance = super().update(instance, validated_data)
+	# 	if 'password' in validated_data:
+	# 		instance.set_password(validated_data['password'])
+	# 	instance = self.update_password(instance, validated_data)
+	# 	return instance
